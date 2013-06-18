@@ -60,6 +60,7 @@ my $sel_output;
 my $sel_display;
 my $sel_transform;
 my %active_transforms;
+my @rules_files;
 
 ########################################################################
 # UI
@@ -296,6 +297,128 @@ eval { $sel_display->select($cui,$win_display); };
 
 # Setup default display...
 eval { $sel_display->initdisplay($win_display); };
+
+
+########################################################################
+# Some callback commands
+
+CRT::Command::register_command('display ',   \&command_setdisplay );
+CRT::Command::register_command('input ',   \&command_setinput );
+CRT::Command::register_command('output ',   \&command_setoutput );
+CRT::Command::register_command('transform ',   \&command_settransform );
+
+sub command_setdisplay
+  {
+  my ($cui,$window,$command,$d) = @_;
+
+  my $idx = 0;
+  IDX: foreach (sort keys %plugins)
+    {
+    my $plugin = $_;
+    if ($plugin =~ /^CRT::Display::(.+)/)
+      {
+      if ($1 eq $d)
+        {
+        &select_display($plugin,$idx);
+        last IDX;
+        }
+      $idx++;
+      }
+    }
+  }
+
+sub command_setinput
+  {
+  my ($cui,$window,$command,$d) = @_;
+
+  my $idx = 0;
+  IDX: foreach (sort keys %plugins)
+    {
+    my $plugin = $_;
+    if ($plugin =~ /^CRT::Input::(.+)/)
+      {
+      if ($1 eq $d)
+        {
+        &select_input($plugin,$idx);
+        last IDX;
+        }
+      $idx++;
+      }
+    }
+  }
+
+sub command_setoutput
+  {
+  my ($cui,$window,$command,$d) = @_;
+
+  my $idx = 0;
+  IDX: foreach (sort keys %plugins)
+    {
+    my $plugin = $_;
+    if ($plugin =~ /^CRT::Output::(.+)/)
+      {
+      if ($1 eq $d)
+        {
+        &select_output($plugin,$idx);
+        last IDX;
+        }
+      $idx++;
+      }
+    }
+  }
+
+sub command_settransform
+  {
+  my ($cui,$window,$command,$d) = @_;
+
+  my $idx = 0;
+  IDX: foreach (sort keys %plugins)
+    {
+    my $plugin = $_;
+    if ($plugin =~ /^CRT::Transform::(.+)/)
+      {
+      if ($1 eq $d)
+        {
+        &select_transform($plugin,$idx);
+        last IDX;
+        }
+      $idx++;
+      }
+    }
+  }
+
+########################################################################
+# Load all rules specified...
+
+@rules_files = @ARGV;
+
+my @rules_files_loaded = ();
+foreach (@rules_files)
+  {
+  my $rf = $_;
+  if (open RF,'<',$rf)
+    {
+    push @rules_files_loaded,$rf;
+    RFL: while (<RF>)
+      {
+      chop;
+      next RFL if (/^\s*#/);
+      next RFL if (/^\s*$/);
+      my $command = $_;
+      CRT::Command::command_issue($command,$cui,$win_command_rep);
+      }
+    close RF;
+    }
+  }
+
+if (scalar @rules_files_loaded > 0)
+  {
+  $win_command_rep->text("Loaded: " . join(', ',@rules_files_loaded));
+  $win_command_rep->draw();
+  }
+
+########################################################################
+# Main loop
 
 # And focus on the command entry area...
 $win_command_req->focus();
@@ -579,6 +702,7 @@ sub select_display
   $sel_display = $plugins{$displays[$index]{'-crtplugin'}};
   eval { $sel_display->select($cui,$win_display); };
   eval { $sel_display->update($cui,$win_display); };
+  $win_display->draw();
   }
 
 ########################################################################

@@ -32,6 +32,7 @@ my $pkg = __PACKAGE__;
 use base (Exporter);
 
 use AnyEvent;
+use CRT::Command;
 use CRT::Messages;
 
 use vars qw
@@ -47,6 +48,7 @@ use vars qw
   $timer
   $cui
   $window
+  $speed
   };
 
 sub new
@@ -55,6 +57,10 @@ sub new
   $class = ref($class) || $class;
   my $self = {@_};
   bless( $self, $class );
+
+  $self->{'speed'} = 1;
+
+  CRT::Command::register_command('speed ',   sub { $self->command_callback_speed(@_); } );
 
   return $self;
   }
@@ -135,7 +141,7 @@ sub _tickercallback
       foreach (split /\s+/,$rest) { push @bytes,hex($_); }
       $self->{'messages'}++;
 
-      CRT::Messages::feed_message(join(',',$last_s,$last_ms,'D11','',hex($id),@bytes));
+      CRT::Messages::feed_message(join(',',$last_s,$last_ms,'D11',hex($id),@bytes));
       }
     }
   my $fh = $self->{'filehandle'};
@@ -152,8 +158,18 @@ sub _tickercallback
 
   my $tim_next=$1 if ($line =~ /^(\d+\.\d+)\s/);
 
-  my $wait = ((defined $tim_last)&&(defined $tim_next))?($tim_next-$tim_last):0;
+  my $wait = ((defined $tim_last)&&(defined $tim_next))?($tim_next-$tim_last)/$self->{'speed'}:0;
   $self->{'timer'} = AE::timer $wait, 0, sub { $self->_tickercallback(); };
+  }
+
+sub command_callback_speed
+  {
+  my ($self,$cui,$window,$command,@args) = @_;
+
+  $self->{'speed'} = $args[0];
+
+  $window->text("CRTD replay speed set to " . $args[0] . "x");
+  $window->draw();
   }
 
 1;

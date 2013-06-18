@@ -59,7 +59,7 @@ sub incomingmessage
 
   my $height = $self->{'text'}->height();
 
-  my ($dsec,$dms,$type,$key,$id,@bytes) = split ',',$msg;
+  my ($dsec,$dms,$type,$id,@bytes) = split ',',$msg;
   my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime $dsec;
   my $stamp = sprintf("%04d-%02d-%02d %02d:%02d:%02d.%03d",$year+1900,$mon+1,$mday,$hour,$min,$sec,$dms);
 
@@ -72,12 +72,12 @@ sub incomingmessage
     }
 
   my @decodes = ();
-  if ($key ne '')
-    {
-    my $d = CRT::Messages::uniques_decodes_ref($key);
-    foreach (sort keys %{$d})
-      { push @decodes,$_.':'.$d->{$_}; }
-    }
+#  if ($key ne '')
+#    {
+#    my $d = CRT::Messages::uniques_decodes_ref($key);
+#    foreach (sort keys %{$d})
+#      { push @decodes,$_.':'.$d->{$_}; }
+#    }
 
   push @{$self->{'msgs'}},sprintf("%s %s %03.3x %s %s %s",$stamp,$type,$id,join(' ',@p_h),join('',@p_a),join(' ',@decodes));
   shift @{$self->{'msgs'}} while ((scalar @{$self->{'msgs'}})>$height);

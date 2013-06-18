@@ -170,7 +170,7 @@ sub _line
       }
     $self->{'last_msm'} = $ms;
 
-    CRT::Messages::feed_message(join(',',$self->{'last_s'},int($self->{'last-us'}/1000),'D11','',hex($id),@bytes));
+    CRT::Messages::feed_message(join(',',$self->{'last_s'},int($self->{'last-us'}/1000),'D11',hex($id),@bytes));
     }
   }
 

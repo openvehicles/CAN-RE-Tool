@@ -33,6 +33,45 @@ use base (Exporter);
 
 my %completions;
 my %commands;
+my %commandstore;
+
+sub store_command
+  {
+  my ($store,$command) = @_;
+
+  $commandstore{$store}{$command} = 1;
+  }
+
+sub store_getcommands
+  {
+  my ($store) = @_;
+
+  return sort keys %{$commandstore{$store}};
+  }
+
+sub store_getstores
+  {
+  return sort keys %commandstore;
+  }
+
+sub store_delete
+  {
+  my ($store,$command) = @_;
+
+  delete $commandstore{$store}{$command};
+  }
+
+sub store_clear
+  {
+  my ($store) = @_;
+
+  %{$commandstore{$store}} = ();
+  }
+
+sub store_clearall
+  {
+  %commandstore = ();
+  }
 
 sub register_command
   {

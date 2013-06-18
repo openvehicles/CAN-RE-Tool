@@ -5,10 +5,15 @@ package CRT::Display::Cyclic;
 my $pkg = __PACKAGE__;
 use base (Exporter);
 
+use CRT::Messages;
+
 use vars qw
   {
   $cui
   $window
+  $text
+  @msgs
+  $pos
   };
 
 sub new
@@ -17,6 +22,8 @@ sub new
   $class = ref($class) || $class;
   my $self = {@_};
   bless( $self, $class );
+
+  $self->{'pos'} = 0;
 
   return $self;
   }
@@ -34,16 +41,63 @@ sub select
   $self->{'window'} = $window;
 
   $window->title('Messages: Cyclic');
+  $self->{'text'} = $window->add("text", "TextViewer", -text => "");
+
+  CRT::Messages::register_listener('CRT::Display::Cyclic',$self);
   }
 
 sub deselect
   {
   my ($self,$cui,$window) = @_;
+
+  $window->delete("text");
+  undef $self->{'text'};
+
+  CRT::Messages::unregister_listener('CRT::Display::Cyclic');
+  }
+
+sub incomingmessage
+  {
+  my ($self,$msg) = @_;
+
+  my $height = $self->{'text'}->height();
+
+  my ($dsec,$dms,$type,$id,@bytes) = split ',',$msg;
+  my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime $dsec;
+  my $stamp = sprintf("%04d-%02d-%02d %02d:%02d:%02d.%03d",$year+1900,$mon+1,$mday,$hour,$min,$sec,$dms);
+
+  my (@p_a,@p_h);
+  foreach (0..7)
+    {
+    push @p_h,(defined $bytes[$_])?sprintf("%02.2x",$bytes[$_]):"  ";
+    my $b = (defined $bytes[$_])?chr($bytes[$_]):chr(0);
+    push @p_a, ($b =~ /[[:print:]]/)?$b:'.';
+    }
+
+  my @decodes = ();
+#  if ($key ne '')
+#    {
+#    my $d = CRT::Messages::uniques_decodes_ref($key);
+#    foreach (sort keys %{$d})
+#      { push @decodes,$_.':'.$d->{$_}; }
+#    }
+
+  my $pos = $self->{'pos'};
+  $self->{'msgs'}[$pos] = sprintf("%s %s %03.3x %s %s %s",$stamp,$type,$id,join(' ',@p_h),join('',@p_a),join(' ',@decodes));
+  $pos = ($pos+1) % $height;
+  $self->{'pos'} = $pos;
+
+  my $newtext = join("\n",@{$self->{'msgs'}});
+  $self->{'text'}->text($newtext);
+  $self->{'text'}->draw();
+  Curses::curs_set(1);
+
+  return undef;
   }
 
 sub update
   {
-  my ($self,$cui,$window) = @_;
+  # We work incrementally, so can just ignore this
   }
 
 1;

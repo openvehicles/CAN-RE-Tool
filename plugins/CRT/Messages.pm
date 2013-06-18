@@ -42,6 +42,7 @@ my $messages_n = 0;
 my %uniques = ();
 my %uniques_n = ();
 my %uniques_l = ();
+my %uniques_t = ();
 my %uniques_decodes = ();
 my %uniques_history = ();
 my $uniques_size = 0;
@@ -58,6 +59,7 @@ sub clear_store
   %uniques = ();
   %uniques_n = ();
   %uniques_l = ();
+  %uniques_t = ();
   $uniques_decodes = ();
   %uniques_history = ();
   $uniques_size = 0;
@@ -78,7 +80,7 @@ sub store_ref
 
 sub uniques_refs
   {
-  return (\%uniques,\%uniques_n,\%uniques_l);
+  return (\%uniques,\%uniques_n,\%uniques_l,\%uniques_t);
   }
 
 sub uniques_history
@@ -86,6 +88,17 @@ sub uniques_history
   my ($key) = @_;
 
   return @{$uniques_history{$key}};
+  }
+
+sub uniques_counts
+  {
+  my ($key) = @_;
+
+  my $n = $uniques_n{$key};
+  my $t = $uniques_t{$key};
+  my $a = (($t>0)&&($n>1))?($t/($n-1)):0;
+
+  return ($n,$a);
   }
 
 sub uniques_decodes_ref
@@ -139,9 +152,16 @@ sub update_unique
   {
   my ($key,$value) = @_;
 
-  my ($last_s,$last_ms) = split ',',$value;
+  my ($last_s,$last_ms) = split /,/,$value;
   $uniques{$key} = $value;
   $uniques_n{$key}++;
+  if (defined $uniques_l{$key})
+    {
+    my ($prev_s,$prev_ms) = split /,/,$uniques_l{$key};
+    my $prev = (1000.0 * $prev_s) + $prev_ms;
+    my $last = (1000.0 * $last_s) + $last_ms;
+    $uniques_t{$key} += $last-$prev;
+    }
   $uniques_l{$key} = "$last_s,$last_ms";
   push @{$uniques_history{$key}},$value;
   $uniques_hn++;
