@@ -6,6 +6,7 @@ my $pkg = __PACKAGE__;
 use base (Exporter);
 
 use CRT::Messages;
+use CRT::Decodes;
 
 use vars qw
   {
@@ -85,22 +86,23 @@ sub update
     my (@p_a,@p_h);
     foreach (0..7)
       {
-      push @p_h,(defined $bytes[$_])?sprintf("%02.2x",$bytes[$_]):"  ";
+      push @p_h,(defined $bytes[$_])?uc(sprintf("%02.2x",$bytes[$_])):"  ";
       my $b = (defined $bytes[$_])?chr($bytes[$_]):chr(0);
       push @p_a, ($b =~ /[[:print:]]/)?$b:'.';
       }
 
     my ($un,$ua) = CRT::Messages::uniques_counts($uk);
 
+    my @decoderkeys = CRT::Decodes::get_decoders_bykey($uk);
     my @decodes = ();
-    if ($uk ne '')
+    foreach (sort @decoderkeys)
       {
-      my $d = CRT::Messages::uniques_decodes_ref($uk);
-      foreach (sort keys %{$d})
-        { push @decodes,$_.':'.$d->{$_}; }
+      my $decoder = $_;
+      my ($v,$u) = CRT::Messages::get_decodes($decoder);
+      push @decodes,"$decoder=$v$u";
       }
 
-    push @msgs,sprintf("%-30.30s [ %-5d %10dms ] %s %s %03.3x %s %s %s",$uk,$un,$ua,$stamp,$type,$id,join(' ',@p_h),join('',@p_a),join(' ',@decodes));
+    push @msgs,sprintf("%-30.30s [ %-5d %10dms ] %s %s %03.3x %s %s %s",$uk,$un,$ua,$stamp,$type,$id,join(' ',@p_h),join('',@p_a),join(', ',@decodes));
     }
 
   $self->{'text'}->text(join("\n",@msgs));

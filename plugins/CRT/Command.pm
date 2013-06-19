@@ -34,6 +34,21 @@ use base (Exporter);
 my %completions;
 my %commands;
 my %commandstore;
+my @pendingerrors;
+
+sub set_error
+  {
+  my (@er) = @_;
+  push @pendingerrors,@er;
+  }
+
+sub get_errors
+  {
+  my @pe = @pendingerrors;
+
+  @pendingerrors = ();
+  return @pe;
+  }
 
 sub store_command
   {
@@ -123,7 +138,7 @@ sub command_issue
   elsif (scalar @candidates > 1)
     {
     # More than one matching command...
-    $window->text("Ambiguous command - matching possibilities include:\n  ".join("\n  ",sort @candidates));
+    $window->text("Ambiguous command - matching possibilities include:\n  ".join("  ",sort @candidates));
     $window->draw();
     }
   else
@@ -164,7 +179,7 @@ sub command_completion
   elsif ((scalar keys %candidates)>1)
     {
     # Multiple expansions match - show them
-    $window->text("Available commands:\n  ".join("\n  ",sort keys %candidates));
+    $window->text("Available commands:\n  ".join("  ",sort keys %candidates));
     $window->draw();
     }
 

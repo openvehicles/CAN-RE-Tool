@@ -31,6 +31,7 @@ package CRT::Messages;
 my $pkg = __PACKAGE__;
 use base (Exporter);
 
+use CRT::Decodes;
 use Devel::Size qw(total_size);
 
 my %listeners;
@@ -43,7 +44,6 @@ my %uniques = ();
 my %uniques_n = ();
 my %uniques_l = ();
 my %uniques_t = ();
-my %uniques_decodes = ();
 my %uniques_history = ();
 my $uniques_size = 0;
 my $uniques_hn = 0;
@@ -60,7 +60,6 @@ sub clear_store
   %uniques_n = ();
   %uniques_l = ();
   %uniques_t = ();
-  $uniques_decodes = ();
   %uniques_history = ();
   $uniques_size = 0;
   $uniques_hn = 0;
@@ -99,13 +98,6 @@ sub uniques_counts
   my $a = (($t>0)&&($n>1))?($t/($n-1)):0;
 
   return ($n,$a);
-  }
-
-sub uniques_decodes_ref
-  {
-  my ($key) = @_;
-
-  return \%{$uniques_decodes{$key}};
   }
 
 sub decodes_ref
@@ -152,6 +144,8 @@ sub update_unique
   {
   my ($key,$value) = @_;
 
+  CRT::Decodes::update_decode($key,$value);
+
   my ($last_s,$last_ms) = split /,/,$value;
   $uniques{$key} = $value;
   $uniques_n{$key}++;
@@ -168,12 +162,30 @@ sub update_unique
   $uniques_size += total_size($value);
   }
 
+sub clear_decode
+  {
+  my ($decode) = @_;
+
+  delete $decodes{$decode};
+  }
+
+sub clear_decodes
+  {
+  %decodes = ();
+  }
+
 sub update_decode
   {
-  my ($key,$decode,$value) = @_;
+  my ($decode,$value,$units) = @_;
 
-  $uniques_decodes{$key}{$decode} = $value;
-  $decodes{$decode} = $value;
+  @{$decodes{$decode}} = ($value,$units);
+  }
+
+sub get_decodes
+  {
+  my $decoder = $_;
+
+  return (@{$decodes{$decoder}});
   }
 
 1;

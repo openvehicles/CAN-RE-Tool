@@ -69,21 +69,13 @@ sub incomingmessage
   my (@p_a,@p_h);
   foreach (0..7)
     {
-    push @p_h,(defined $bytes[$_])?sprintf("%02.2x",$bytes[$_]):"  ";
+    push @p_h,(defined $bytes[$_])?uc(sprintf("%02.2x",$bytes[$_])):"  ";
     my $b = (defined $bytes[$_])?chr($bytes[$_]):chr(0);
     push @p_a, ($b =~ /[[:print:]]/)?$b:'.';
     }
 
-  my @decodes = ();
-#  if ($key ne '')
-#    {
-#    my $d = CRT::Messages::uniques_decodes_ref($key);
-#    foreach (sort keys %{$d})
-#      { push @decodes,$_.':'.$d->{$_}; }
-#    }
-
   my $pos = $self->{'pos'};
-  $self->{'msgs'}[$pos] = sprintf("%s %s %03.3x %s %s %s",$stamp,$type,$id,join(' ',@p_h),join('',@p_a),join(' ',@decodes));
+  $self->{'msgs'}[$pos] = sprintf("%s %s %03.3x %s %s",$stamp,$type,$id,join(' ',@p_h),join('',@p_a));
   $pos = ($pos+1) % $height;
   $self->{'pos'} = $pos;
 

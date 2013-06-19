@@ -101,18 +101,17 @@ sub incomingmessage
   my ($dsec,$dms,$type,$id,@bytes) = split ',',$msg;
 
   my $idx = sprintf '%03x',$id;
-  my $key = $idx;
+  my $key = 'ID:'.$idx;
   my $idh = $self->{'u'}{$idx};
   if (defined $idh)
     {
     my ($bh,@bl) = ('');
     foreach (@bytes)
       {
-      my $b = sprintf '%02x',$_;
+      my $b = uc(sprintf '%02x',$_);
       $bh .= $b;
       push @bl,$bh;
       }
-    $key = $idx;
     foreach (split /,/,$idh)
       {
       $key .= ':'.$bl[$_ - 1];

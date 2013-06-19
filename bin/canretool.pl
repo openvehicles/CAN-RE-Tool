@@ -51,6 +51,7 @@ use Module::Pluggable::Object;
 use Data::Dumper;
 use CRT::Messages;
 use CRT::Command;
+use CRT::Decodes;
 
 ########################################################################
 # Globals
@@ -618,6 +619,7 @@ sub ui_ticker_store
   my @msgs;
 
   my ($mn,$ms,$un,$uhn,$us,$dn) = CRT::Messages::store_stats();
+  my ($nd,$ds) = CRT::Decodes::decoder_stats();
 
   push @msgs,sprintf("Messages:   %-16.16s",&ui_comma($mn));
   push @msgs,sprintf("  Size:     %-16.16s",&ui_bytes($ms));
@@ -626,13 +628,24 @@ sub ui_ticker_store
   push @msgs,sprintf("  History:  %-16.16s",&ui_comma($uhn));
   push @msgs,sprintf("  Size:     %-16.16s",&ui_bytes($us));
   push @msgs,sprintf("  Decodes:  %-16.16s",&ui_comma($dn));
+  push @msgs,'';
+  push @msgs,sprintf("Decoders:   %-16.16s",&ui_comma($nd));
+  push @msgs,sprintf("  Size:     %-16.16s",&ui_bytes($ds));
 
   my $newtext = join "\n",@msgs;
+
   if ($win_store_text->get() ne $newtext)
     {
     $win_store_text->text($newtext);
     $win_store_text->draw();
     Curses::curs_set(1);
+    }
+
+  my @errors = CRT::Command::get_errors();
+  if (scalar @errors > 0)
+    {
+    $win_command_rep->text("Error:\n  ".join("\n  ",@errors));
+    $win_command_rep->draw();
     }
   }
 
@@ -795,16 +808,16 @@ sub select_transform
     }
 
   # Nasty hack to re-display the menu as best we can
-  $cui->schedule_event(
-    sub
-      {
-      $menu->focus();
-      $menu->menu_right();
-      $menu->menu_right();
-      $menu->menu_right();
-      $menu->menu_right();
-      $menu->pulldown();
-      }
-    );
+  #$cui->schedule_event(
+  #  sub
+  #    {
+  #    $menu->focus();
+  #    $menu->menu_right();
+  #    $menu->menu_right();
+  #    $menu->menu_right();
+  #    $menu->menu_right();
+  #    $menu->pulldown();
+  #    }
+  #  );
   }
 
