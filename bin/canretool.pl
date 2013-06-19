@@ -66,7 +66,7 @@ my @rules_files;
 ########################################################################
 # UI
 
-my $cui = new Curses::UI( -color_support => 1,  -read_timeout => 0 );
+my $cui = new Curses::UI( -color_support => 1, -mouse_support => 1, -read_timeout => 0 );
 $cui->{-read_timeout} = 0;
 
 ########################################################################

@@ -75,25 +75,6 @@ sub deselect
   CRT::Messages::unregister_listener('aaa...Uniques');
   }
 
-sub parseload_unique
-  {
-  my ($self,$keyname,$value) = @_;
-
-  my ($id,$bytes) = ('','');
-  foreach (split /\s+/,$value)
-    {
-    if (/^id=(.+)/i)
-      {
-      $id = $1;
-      }
-    elsif (/^bytes=(.+)/)
-      {
-      $bytes=$_;
-      }
-    }
-  $self->{'u'}{$id}{$bytes} = $keyname;
-  }
-
 sub incomingmessage
   {
   my ($self,$msg) = @_;
@@ -105,12 +86,11 @@ sub incomingmessage
   my $idh = $self->{'u'}{$idx};
   if (defined $idh)
     {
-    my ($bh,@bl) = ('');
+    my @bl;
     foreach (@bytes)
       {
       my $b = uc(sprintf '%02x',$_);
-      $bh .= $b;
-      push @bl,$bh;
+      push @bl,$b;
       }
     foreach (split /,/,$idh)
       {

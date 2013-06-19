@@ -1,7 +1,7 @@
 # Tesla Roadster Rules file...
 
 unique 100 1
-unique 102 2
+unique 102 1,2
 unique 402 1
 
 decoder ID:100:80 SOC { ($d2, '%'); }
@@ -10,7 +10,7 @@ decoder ID:100:80 estRange { (($d8<<8)+$d7,'miles'); }
 
 decoder ID:100:81 cartime { (scalar gmtime(($d8<<24)+($d7<<16)+($d6<<8)+$d5),''); }
 
-decoder ID:100:82 ambient { ($d2,'celcius'); }
+decoder ID:100:82 ambient { ($d2,'C'); }
 
 decoder ID:100:83 gps_latitude { (sprintf('%0.6f',((($d8<<24)+($d7<<16)+($d6<<8)+$d5)/2048/3600)),''); }
 
