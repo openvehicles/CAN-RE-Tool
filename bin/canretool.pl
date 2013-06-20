@@ -85,7 +85,7 @@ $cui->progress(
 my $plugincount = 0;
 foreach my $plugin (@pluginlist)
   {
-  $cui->setprogress($plugincount++,"Loading $plugin..."); select undef,undef,undef,0.05;
+  $cui->setprogress($plugincount++,"Loading $plugin..."); select undef,undef,undef,0.5/(scalar @pluginlist);
   $plugins{$plugin} = $plugin->new();
   }
 $cui->setprogress(scalar @pluginlist,'Plugins loaded ok');

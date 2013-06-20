@@ -7,56 +7,75 @@ unique 402 1
 decoder ID:100:80 SOC { ($d2, '%'); }
 decoder ID:100:80 idealRange { (($d4<<8)+$d3,'miles'); }
 decoder ID:100:80 estRange { (($d8<<8)+$d7,'miles'); }
+coverage ID:100:80 1,2,3,4,7,8
 
 decoder ID:100:81 cartime { (scalar gmtime(($d8<<24)+($d7<<16)+($d6<<8)+$d5),''); }
+coverage ID:100:81 1,5,6,7,8
 
 decoder ID:100:82 ambient { ($d2,'C'); }
+coverage ID:100:82 1,2
 
 decoder ID:100:83 gps_latitude { (sprintf('%0.6f',((($d8<<24)+($d7<<16)+($d6<<8)+$d5)/2048/3600)),''); }
+coverage ID:100:83 1,5,6,7,8
 
 decoder ID:100:84 gps_longitude { (sprintf('%0.6f',((($d8<<24)+($d7<<16)+($d6<<8)+$d5)/2048/3600)),''); }
+coverage ID:100:84 1,5,6,7,8
 
 decoder ID:100:85 gps_lock { (($d2==0)?'nolock':'lock',''); }
 decoder ID:100:85 gps_direction { (($d4<<8)+$d3,'d'); }
 decoder ID:100:85 gps_altitude { (($d6 != 255)?(($d6<<8)+$d5):'-','m'); }
+coverage ID:100:85 1,2,3,4,5,6
 
 decoder ID:100:88 chargelimit { ($d7,'A'); }
 decoder ID:100:88 chargecurrent { ($d2,'A'); }
 decoder ID:100:88 chargeduration { (($d4<<8)+$d3,'mins'); }
+coverage ID:100:88 1,2,3,4,7
 
 decoder ID:100:89 speed { ($d2,'mph'); }
 decoder ID:100:89 vline { (($d4<<8)+$d3,'V'); }
 decoder ID:100:89 iavailable { ($d6,'A'); }
+coverage ID:100:89 1,2,3,4,6
 
 decoder ID:100:95 charge_state { ($d2,''); }
 decoder ID:100:95 charge_substate { ($d3,''); }
 decoder ID:100:95 charge_mode { ($d6>>4,''); }
+coverage ID:100:95 1,2,3,6
 
 decoder ID:100:96 door_l { (($d2 & 0x01)?'open':'closed',''); }
 decoder ID:100:96 door_r { (($d2 & 0x02)?'open':'closed',''); }
 decoder ID:100:96 door_cp { (($d2 & 0x04)?'open':'closed',''); }
 decoder ID:100:96 pilot { (($d2 & 0x08)?'true':'false',''); }
 decoder ID:100:96 charging { (($d2 & 0x10)?'true':'false',''); }
+coverage ID:100:96 1,2
 
 decoder ID:100:97 odometer { (sprintf("%0.1f",(($d7<<16)+($d6<<8)+$d5)/10),'miles'); }
+coverage ID:100:97 1,5,6,7
 
 decoder ID:100:9C trip { (sprintf("%0.1f",(($d4<<8)+$d3)/10),'miles'); }
+coverage ID:100:9C 1,3,4
 
 decoder ID:100:A3 Tpem { ($d2,'C'); }
 decoder ID:100:A3 Tmotor { ($d3,'C'); }
 decoder ID:100:A3 Tbattery { ($d7,'C'); }
+coverage ID:100:A3 1,2,3,7
 
 decoder ID:100:A4 vin1 { (chr($d2).chr($d3).chr($d4).chr($d5).chr($d6).chr($d7).chr($d8),''); }
 decoder ID:100:A5 vin2 { (chr($d2).chr($d3).chr($d4).chr($d5).chr($d6).chr($d7).chr($d8),''); }
 decoder ID:100:A6 vin3 { (chr($d2).chr($d3).chr($d4),''); }
+coverage ID:100:A4 1,2,3,4,5,6,7,8
+coverage ID:100:A5 1,2,3,4,5,6,7,8
+coverage ID:100:A6 1,2,3,4
 
 decoder ID:102:05:19 set_chargemode { ($d5,''); }
+coverage ID:102:05:19 1,2,5
 
 decoder ID:102:05:03 startstopcharge { (($d5==0)?'stop':'start',''); }
+coverage ID:102:05:03 1,2,5
 
 decoder ID:102:0E:04 car_locked { ('true',''); }
-
+coverage ID:102:0E:04 1,2
 decoder ID:102:0E:05 car_unlocked { ('true',''); }
+coverage ID:102:0E:05 1,2
 
 decoder ID:344 tpms_flp { (sprintf('%d',$d1/2.755),'psi'); }
 decoder ID:344 tpms_frp { (sprintf('%d',$d3/2.755),'psi'); }
@@ -66,6 +85,8 @@ decoder ID:344 tpms_flt { (sprintf('%d',$d2-40),'C'); }
 decoder ID:344 tpms_frt { (sprintf('%d',$d4-40),'C'); }
 decoder ID:344 tpms_rlt { (sprintf('%d',$d6-40),'C'); }
 decoder ID:344 tpms_rrt { (sprintf('%d',$d8-40),'C'); }
+coverage ID:344 1,2,3,4,5,6,7,8
 
 decoder ID:402:FA odometer { (sprintf('%0.1f',(($d6<<16)+($d5<<8)+$d4)/10),'miles'); }
+coverage ID:402:FA 1,4,5,6
 

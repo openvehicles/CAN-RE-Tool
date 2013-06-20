@@ -35,8 +35,12 @@ use CRT::Command;
 use CRT::Messages;
 use Devel::Size qw(total_size);
 
-my %decoders = ();
+# The decoders monitor particular unique keys. If updater, they run to produce the decoded value.
+my %decoders = ();		# Key is <UniqueKey><DecoderKey>, value is code
 my $ndecoders = 0;
+
+# The coverage system is used to specify messages (or parts of messages) that have been decoded
+my %coverage = ();		# Key is <UniqueKey>, value is comma-separated list of bytes covered (1-8)
 
 INIT
   {
@@ -48,6 +52,9 @@ sub init_decoders
   CRT::Command::register_command('decoder ',   \&command_callback_decoder );
   CRT::Command::register_command('no decoder ', \&command_callback_nodecoder );
   CRT::Command::register_command('clear decoders', \&command_callback_cleardecoders );
+  CRT::Command::register_command('coverage ',   \&command_callback_coverage );
+  CRT::Command::register_command('no decoder ', \&command_callback_nocoverage );
+  CRT::Command::register_command('clear coverage', \&command_callback_clearcoverages );
   }
 
 sub command_callback_decoder
@@ -85,6 +92,60 @@ sub command_callback_cleardecoders
 
   $window->text("Cleared all decoders");
   $window->draw();
+  }
+
+sub command_callback_coverage
+  {
+  my ($cui,$window,$command,@args) = @_;
+
+  my $key = shift @args;
+  my $bytes = shift @args;
+
+  &set_coverage($key,$bytes);
+
+  $window->text("Defined coverage on $key for byte(s) $bytes");
+  $window->draw();
+  }
+
+sub command_callback_nocoverage
+  {
+  my ($cui,$window,$command,@args) = @_;
+
+  my $key = shift @args;
+
+  &clear_coverage($key);
+
+  $window->text("Cleared coverage on $key");
+  $window->draw();
+  }
+
+sub command_callback_clearcoverages
+  {
+  my ($cui,$window,$command,@args) = @_;
+
+  &clear_coverages();
+
+  $window->text("Cleared all coverages");
+  $window->draw();
+  }
+
+sub clear_coverages
+  {
+  %coverage = ();
+  }
+
+sub clear_coverage
+  {
+  my ($key) = @_;
+
+  delete $coverage{$key};
+  }
+
+sub set_coverage
+  {
+  my ($key,$bytes) = @_;
+
+  $coverage{$key} = $bytes;
   }
 
 sub clear_decoders
@@ -150,6 +211,21 @@ sub get_decoders_bykey
     { return keys %{$decoders{$key}}; }
   else
     { return (); }
+  }
+
+sub get_coverage_bykey
+  {
+  my ($key) = @_;
+
+  my @result = (0,0,0,0,0,0,0,0);
+
+  if (defined $coverage{$key})
+    {
+    foreach (split /,/,$coverage{$key})
+      { $result[$_-1]=1; }
+    }
+
+  return @result;
   }
 
 sub decoder_stats
