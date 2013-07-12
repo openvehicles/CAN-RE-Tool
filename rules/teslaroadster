@@ -2,7 +2,13 @@
 
 unique 100 1
 unique 102 1,2
+unique 400 1,2
 unique 402 1
+
+decoder ID:100:06 timer_flag { ($d2, ''); }
+decoder ID:100:06 timer_mode { ($d5, ''); }
+decoder ID:100:06 timer_start { ((($d5<<8)+$d6), ''); }
+coverage ID:100:06 1,2,5,6
 
 decoder ID:100:80 SOC { ($d2, '%'); }
 decoder ID:100:80 idealRange { (($d4<<8)+$d3,'miles'); }
@@ -36,6 +42,11 @@ decoder ID:100:89 vline { (($d4<<8)+$d3,'V'); }
 decoder ID:100:89 iavailable { ($d6,'A'); }
 coverage ID:100:89 1,2,3,4,6
 
+decoder ID:100:93 error_raise { ($d2, ''); }
+decoder ID:100:93 error_code  { (sprintf('%04.4x',($d4<<8)+$d3), ''); }
+decoder ID:100:93 error_data  { (sprintf('%08.8x',($d8<<24)+($d7<<16)+($d6<<8)+$d5), ''); }
+coverage ID:100:93 1,2,3,4,5,6,7,8
+
 decoder ID:100:95 charge_state { ($d2,''); }
 decoder ID:100:95 charge_substate { ($d3,''); }
 decoder ID:100:95 charge_mode { ($d6>>4,''); }
@@ -53,6 +64,13 @@ coverage ID:100:97 1,5,6,7
 
 decoder ID:100:9C trip { (sprintf("%0.1f",(($d4<<8)+$d3)/10),'miles'); }
 coverage ID:100:9C 1,3,4
+
+decoder ID:100:9E diag_CAC { (sprintf("%0.2f",(($d4*100)+((($d3*100)+128)/256))/100),''); }
+decoder ID:100:9E diag_AR  { (sprintf("%0.2f",(($d6*100)+((($d5*100)+128)/256))/100),''); }
+coverage ID:100:9E 1,3,4,5,6
+
+decoder ID:100:9F diag_kWhR  { (sprintf("%0.2f",(($d8*100)+((($d7*100)+128)/256))/100),''); }
+coverage ID:100:9F 1,7,8
 
 decoder ID:100:A3 Tpem { ($d2,'C'); }
 decoder ID:100:A3 Tmotor { ($d3,'C'); }
@@ -86,6 +104,9 @@ decoder ID:344 tpms_frt { (sprintf('%d',$d4-40),'C'); }
 decoder ID:344 tpms_rlt { (sprintf('%d',$d6-40),'C'); }
 decoder ID:344 tpms_rrt { (sprintf('%d',$d8-40),'C'); }
 coverage ID:344 1,2,3,4,5,6,7,8
+
+decoder ID:400:02 speedo_amps { (sprintf("%d",$d3), ''); }
+coverage ID:400 1,3
 
 decoder ID:402:FA odometer { (sprintf('%0.1f',(($d6<<16)+($d5<<8)+$d4)/10),'miles'); }
 coverage ID:402:FA 1,4,5,6
