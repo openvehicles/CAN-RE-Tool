@@ -35,6 +35,7 @@ use CRT::Decodes;
 use Devel::Size qw(total_size);
 
 my %listeners;
+my %transmitters;
 
 my @messages = ();
 my $messages_size = 0;
@@ -124,6 +125,32 @@ sub unregister_all_listeners
   %listeners = ();
   }
 
+sub register_transmitter
+  {
+  my ($id,$object) = @_;
+
+  $transmitters{$id} = $object;
+  }
+
+sub unregister_transmitter
+  {
+  my ($id) = @_;
+
+  delete $transmitters{$id};
+  }
+
+sub unregister_all_transmitters
+  {
+  %transmitters = ();
+  }
+
+sub register_command
+  {
+  my ($prefix,$callback) = @_;
+
+  $commands{lc($prefix)} = $callback;
+  }
+
 sub feed_message
   {
   my ($msg) = @_;
@@ -138,6 +165,17 @@ sub feed_message
   push @messages,$msg;
   $messages_n++;
   $messages_size += total_size($msg);
+  }
+
+sub transmit
+  {
+  my ($msg) = @_;
+
+  foreach (sort keys %transmitters)
+    {
+    my $o = $transmitters{$_};
+    eval { $o->transmitmessage($msg); };
+    }
   }
 
 sub update_unique
