@@ -59,7 +59,9 @@ use CRT::Decodes;
 my $sel_input;
 my $sel_output;
 my $sel_display;
+my $sel_simulator;
 my $sel_transform;
+my %active_simulators;
 my %active_transforms;
 my @rules_files;
 
@@ -74,7 +76,7 @@ $cui->{-read_timeout} = 0;
 
 my %plugins;
 
-my $pluginfinder  = Module::Pluggable::Object->new(require=>1, search_path => ['CRT::Helper','CRT::Input','CRT::Output','CRT::Display','CRT::Transform']);
+my $pluginfinder  = Module::Pluggable::Object->new(require=>1, search_path => ['CRT::Helper','CRT::Input','CRT::Output','CRT::Display','CRT::Simulator','CRT::Transform']);
 my @pluginlist = sort $pluginfinder->plugins();
 $cui->progress(
         -max => scalar @pluginlist,
@@ -91,8 +93,8 @@ foreach my $plugin (@pluginlist)
 $cui->setprogress(scalar @pluginlist,'Plugins loaded ok');
 $cui->noprogress;
 
-my (@inputs,@outputs,@displays,@transforms);
-my ($input_idx, $output_idx, $display_idx, $transform_idx) = (0,0,0,0);
+my (@inputs,@outputs,@displays,@transforms,@simulators);
+my ($input_idx, $output_idx, $display_idx, $simulate_idx, $transform_idx) = (0,0,0,0,0);
 foreach (sort keys %plugins)
   {
   my $plugin = $_;
@@ -115,6 +117,11 @@ foreach (sort keys %plugins)
     my $selected = ($plugin =~ /XNone$/)?'o':' ';
     push @displays,{ -label => "<$selected> ".$name, -value => sub { &select_display($plugin,$idx); }, -crtplugin => $plugin };
     }
+  elsif ($plugin =~ /^CRT::Simulator::(.+)/)
+    {
+    my $idx = $simulate_idx++;
+    push @simulators,{ -label => "[ ] ".$name, -value => sub { &select_simulator($plugin,$idx); }, -crtplugin => $plugin };
+    }
   elsif ($plugin =~ /^CRT::Transform::(.+)/)
     {
     my $idx = $transform_idx++;
@@ -131,6 +138,7 @@ my @menu =
     { -label => 'Display', -submenu => \@displays },
     { -label => 'Inputs', -submenu => \@inputs },
     { -label => 'Outputs', -submenu => \@outputs },
+    { -label => 'Simulators', -submenu => \@simulators },
     { -label => 'Transforms', -submenu => \@transforms }
   );
  
@@ -306,6 +314,7 @@ eval { $sel_display->initdisplay($win_display); };
 CRT::Command::register_command('display ',   \&command_setdisplay );
 CRT::Command::register_command('input ',   \&command_setinput );
 CRT::Command::register_command('output ',   \&command_setoutput );
+CRT::Command::register_command('simulator ',   \&command_setsimulator );
 CRT::Command::register_command('transform ',   \&command_settransform );
 
 sub command_setdisplay
@@ -361,6 +370,26 @@ sub command_setoutput
       if ($1 eq $d)
         {
         &select_output($plugin,$idx);
+        last IDX;
+        }
+      $idx++;
+      }
+    }
+  }
+
+sub command_setsimulator
+  {
+  my ($cui,$window,$command,$d) = @_;
+
+  my $idx = 0;
+  IDX: foreach (sort keys %plugins)
+    {
+    my $plugin = $_;
+    if ($plugin =~ /^CRT::Simulator::(.+)/)
+      {
+      if ($1 eq $d)
+        {
+        &select_simulator($plugin,$idx);
         last IDX;
         }
       $idx++;
@@ -474,6 +503,8 @@ sub ui_shutdown
   eval { $sel_display->deselect($cui,$win_display); } if (defined $sel_display);
   eval { $sel_input->deselect($cui,$win_display); } if (defined $sel_input);
   eval { $sel_output->deselect($cui,$win_display); } if (defined $sel_output);
+  foreach my $plugin (sort keys %active_simulators)
+    { eval { $active_simulators{$plugin}->deselect($cui,$win_display); }; }
   foreach my $plugin (sort keys %active_transforms)
     { eval { $active_transforms{$plugin}->deselect($cui,$win_display); }; }
 
@@ -774,6 +805,51 @@ sub select_output
   # Inform the new output that it is being selected
   $sel_output = $plugins{$outputs[$index]{'-crtplugin'}};
   eval { $sel_output->select($cui,$win_display); };
+  }
+
+########################################################################
+# select_simulator
+#
+# Process menu selection for new SIMULATOR
+
+sub select_simulator
+  {
+  my ($plugin,$index) = @_;
+
+  my $po = $plugins{$simulators[$index]{'-crtplugin'}};
+
+  if ($simulators[$index]{'-label'} =~ /^\[X\] /)
+    {
+    # Disable the simulator plugin...
+    $simulators[$index]{'-label'} =~ s/\[.\] /\[ \] /;
+    if ($sel_simulator == $po)
+      {
+      # Currently active simulator is the selected one, so deselect it
+      undef $sel_simulator;
+      }
+    eval { $po->deselect($cui,$window); };
+    delete $active_simulator{$plugin};
+    }
+  else
+    {
+    # Enable the simulator plugin...
+    $simulators[$index]{'-label'} =~ s/\[.\] /\[X\] /;
+    $active_simulators{$plugin} = $po;
+    eval { $po->select($cui,$window); };
+    }
+
+  # Nasty hack to re-display the menu as best we can
+  #$cui->schedule_event(
+  #  sub
+  #    {
+  #    $menu->focus();
+  #    $menu->menu_right();
+  #    $menu->menu_right();
+  #    $menu->menu_right();
+  #    $menu->menu_right();
+  #    $menu->pulldown();
+  #    }
+  #  );
   }
 
 ########################################################################
