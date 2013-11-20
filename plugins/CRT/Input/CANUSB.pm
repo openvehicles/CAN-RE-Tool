@@ -71,11 +71,81 @@ sub select()
   {
   my ($self, $cui, $window) = @_;
 
+  my $dialog = $cui->add(
+        'canusb_source', 'Window',
+        -width=>60,
+        -height=>17,
+        -border=>1,
+        -ipad=>1,
+        -fg=>-1,
+        -bg=>-1,
+        -title=>'CAN USB Selection',
+        -titleinverse=>1,
+        -centered=>1);
+
+  my @usbsources = ();
+  foreach (glob '/dev/tty.*')
+    {
+    push @usbsources,$1 if (/^\/dev\/tty\.(.+)$/);
+    }
+
+  my $sources = $dialog->add(
+        'canusb_sources', 'Listbox',
+        -border => 1,
+        -title => 'USB Source',
+        -titleinverse => 1,
+        -y => 0,
+        -x => 0,
+        -width => 40,
+        -height => 11,
+        -wraparound => 1,
+        -values => \@usbsources);
+
+  my $baudrates = $dialog->add(
+        'canusb_baudrates', 'Listbox',
+        -border => 1,
+        -title => 'Baud Rate',
+        -titleinverse => 1,
+        -y => 0,
+        -x => 42,
+        -width => 14,
+        -height => 11,
+        -radio => 1,
+        -wraparound => 1,
+        -values => [ 0, 1, 2, 3, 4, 5, 6, 7, 8 ],
+        -labels => { 0=>'10Kbps', 1=>'20Kbps', 2=>'50Kbps', 3=>'100Kbps', 4=>'125Kbps', 5=>'250Kbps', 6=>'500Kbps', 7=>'800KBps', 8=>'1Mbps' });
+  $baudrates->set_selection(8);
+
+  my $buttons = $dialog->add(
+        'canusb_buttons', 'Buttonbox',
+        -y => -1,
+        -x => 20,
+        -buttons => [ 'ok', 'cancel' ]);
+
+  $buttons->set_routine( 'press-button', sub {
+        my $this = shift;
+        my $parent = $this->parent;
+        $cui->delete('canusb_source');
+        $parent->loose_focus();
+    } );
+
+  $dialog->modalfocus();
+
+  my $sel_baudrate = $baudrates->get();
+  my $sel_source = $sources->get();
+  my $sel_button = $buttons->get();
+
+  return if ($sel_button == 0); # Cancelled
+
   $self->{'cui'} = $cui;
   $self->{'window'} = $window;
 
+  # Baud rate mappings:
+  # S0, S1, S2,  S3,  S4,  S5,  S6,  S7,    S8
+  # 10, 20, 50, 100, 125, 250, 500, 800, 1Mbps
+
   $self->{'baud'} = '115200';
-  my ($device) = glob '/dev/tty.usb*';
+  my $device = '/dev/tty.' . $sel_source;
   return if (! -e $device);
 
   $self->{'device'} = $1 if ($device =~ /\/dev\/(.+)$/);
@@ -101,9 +171,11 @@ sub select()
   undef $self->{'last_s'};
   undef $self->{'last_us'};
   undef $self->{'last_msm'};
-  $canusb_h->push_write("\r\r\rS8\rZ1\r");  # Initialise the CANUSB device
+  $canusb_h->push_write("\r\r\rS".$sel_baudrate."\rZ1\r");  # Initialise the CANUSB device
   $canusb_h->push_write("\rO\r");           # Open the CANUSB device
   $canusb_h->push_read(line => sub { $self->_line(@_); } );
+
+  CRT::Messages::register_transmitter('Input_CANUSB', sub { $self->_transmit(@_); } );
   }
 
 sub deselect()
@@ -129,6 +201,8 @@ sub deselect()
   undef $self->{'last_msm'};
   undef $self->{'cui'};
   undef $self->{'window'};
+
+  CRT::Messages::unregister_transmitter('Input_CANUSB');
   }
 
 sub progress
@@ -139,6 +213,23 @@ sub progress
           $self->{'messages'});
   }
 
+sub _transmit
+  {
+  my ($self, $msg) = @_;
+
+  my ($type,$id,@bytes) = split(/,/,$msg);
+
+  if ($type eq 'D11')
+    {
+    my $t_id = sprintf '%03.3x',$id;
+    my @t_b = ();
+    foreach (@bytes) { push @t_b,sprintf('%02.2x',$_); }
+
+    my $h = $self->{'canusb_h'};
+    $h->push_write('r'.$t_id.(scalar @t_b).join('',@t_b)."\r");
+    }
+  }
+
 sub _line
   {
   my ($self,$hdl,$line) = @_;
@@ -146,7 +237,7 @@ sub _line
   $hdl->push_read(line => sub { $self->_line(@_); } );
 
   #t1008A326490000001B0010DA
-  if ($line =~ /^t(\d\d\d)(\d)(.+)/)
+  if ($line =~ /^t(\w\w\w)(\d)(.+)/)
     {
     $self->{'messages'}++;
     $self->{'filepos'} += length($line);
