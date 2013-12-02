@@ -217,9 +217,9 @@ sub _transmit
   {
   my ($self, $msg) = @_;
 
-  my ($type,$id,@bytes) = split(/,/,$msg);
+  my ($dsec,$dms,$type,$id,@bytes) = split(/,/,$msg);
 
-  if ($type eq 'D11')
+  if ($type eq 'T11')
     {
     my $t_id = sprintf '%03.3x',$id;
     my @t_b = ();
@@ -261,7 +261,7 @@ sub _line
       }
     $self->{'last_msm'} = $ms;
 
-    CRT::Messages::feed_message(join(',',$self->{'last_s'},int($self->{'last-us'}/1000),'D11',hex($id),@bytes));
+    CRT::Messages::feed_message(join(',',$self->{'last_s'},int($self->{'last-us'}/1000),'R11',hex($id),@bytes));
     }
   }
 

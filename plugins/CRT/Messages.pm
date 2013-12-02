@@ -176,6 +176,11 @@ sub transmit
     my $o = $transmitters{$_};
     eval { $o->transmitmessage($msg); };
     }
+
+  if (scalar keys %transmitters > 0)
+    {
+    feed_message($msg);
+    }
   }
 
 sub update_unique

@@ -141,7 +141,7 @@ sub _tickercallback
       foreach (split /\s+/,$rest) { push @bytes,hex($_); }
       $self->{'messages'}++;
 
-      CRT::Messages::feed_message(join(',',$last_s,$last_ms,'D11',hex($id),@bytes));
+      CRT::Messages::feed_message(join(',',$last_s,$last_ms,'R11',hex($id),@bytes));
       }
     }
   my $fh = $self->{'filehandle'};
