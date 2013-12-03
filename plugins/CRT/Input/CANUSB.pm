@@ -175,7 +175,7 @@ sub select()
   $canusb_h->push_write("\rO\r");           # Open the CANUSB device
   $canusb_h->push_read(line => sub { $self->_line(@_); } );
 
-  CRT::Messages::register_transmitter('Input_CANUSB', sub { $self->_transmit(@_); } );
+  CRT::Messages::register_transmitter('Input_CANUSB', $self );
   }
 
 sub deselect()
@@ -213,7 +213,7 @@ sub progress
           $self->{'messages'});
   }
 
-sub _transmit
+sub transmitmessage
   {
   my ($self, $msg) = @_;
 
@@ -226,7 +226,7 @@ sub _transmit
     foreach (@bytes) { push @t_b,sprintf('%02.2x',$_); }
 
     my $h = $self->{'canusb_h'};
-    $h->push_write('r'.$t_id.(scalar @t_b).join('',@t_b)."\r");
+    $h->push_write('t'.$t_id.(scalar @t_b).join('',@t_b)."\r");
     }
   }
 
