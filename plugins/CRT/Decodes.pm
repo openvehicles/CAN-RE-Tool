@@ -33,6 +33,7 @@ use base (Exporter);
 
 use CRT::Command;
 use CRT::Messages;
+use CRT::Variables;
 use Devel::Size qw(total_size);
 
 # The decoders monitor particular unique keys. If updater, they run to produce the decoded value.
@@ -199,6 +200,7 @@ sub update_decode
     if ((defined $v)&&(defined $u))
       {
       CRT::Messages::update_decode($decoder,$v,$u);
+      CRT::Variables::update_variable($decoder,join(' ',$v,$u));
       }
     }
   }
