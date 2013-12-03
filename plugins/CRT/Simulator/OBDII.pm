@@ -32,6 +32,8 @@ my $pkg = __PACKAGE__;
 use base (Exporter);
 
 use CRT::Command;
+use CRT::Messages;
+use CRT::Variables;
 
 use vars qw
   {
@@ -77,6 +79,19 @@ sub incomingmessage
   my ($self,$msg) = @_;
 
   my ($dsec,$dms,$type,$id,@bytes) = split ',',$msg;
+
+  if (($type eq 'R11')&&($bytes[0] == 0x02))
+    {
+    if ($bytes[1] == 0x01)
+      {
+      my $pid = sprintf("pid_%02.2x_%02.2x",$bytes[1],$bytes[2]);
+      my $val = CRT::Variables::get_variable($pid);
+      if (defined $val)
+        {
+        CRT::Messages::transmit(join(',',0,0,'T11',0x7e8,4,0x41,$bytes[2],($val % 256, $val / 256)));
+        }
+      }
+    }
 
   return $msg;
   }

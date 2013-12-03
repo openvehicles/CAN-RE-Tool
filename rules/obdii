@@ -1,0 +1,9 @@
+# Rules file for an OBDII simulator...
+
+speed 1
+
+simulator OBDII
+display Scrolling
+
+var pid_01_0c 10
+var pid_09_02 5GZCZ43D13S812715
