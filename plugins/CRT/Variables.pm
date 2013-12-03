@@ -32,11 +32,78 @@ my $pkg = __PACKAGE__;
 use base (Exporter);
 
 use CRT::Decodes;
+use CRT::Command;
 use Devel::Size qw(total_size);
 
 my %listeners;
 my %listenersall;
 my %variables;
+
+INIT
+  {
+  &init_variables();
+  }
+
+sub init_variables
+  {
+  CRT::Command::register_command('var ',   \&command_callback_var );
+  CRT::Command::register_command('no var ', \&command_callback_novar );
+  CRT::Command::register_command('clear variables', \&command_callback_clearvariables );
+  CRT::Command::register_completions('var ', \&command_callback_completions );
+  CRT::Command::register_completions('no var ', \&command_callback_completions );
+  }
+
+sub command_callback_var
+  {
+  my ($cui,$window,$command,@args) = @_;
+
+  my $var = shift @args;
+  my $val = join(" ",@args);
+
+  &update_variable($var,$val);
+
+  $window->text("Defined variable $var = $val");
+  $window->draw();
+  }
+
+sub command_callback_novar
+  {
+  my ($cui,$window,$command,@args) = @_;
+
+  my $cmd2 = shift @args;
+  my $var = shift @args;
+
+  &update_variable($var,undef);
+
+  $window->text("Cleared variable $var");
+  $window->draw();
+  }
+
+sub command_callback_clearvariables
+  {
+  my ($cui,$window,$command,@args) = @_;
+
+  &clear_decoders();
+
+  $window->text("Cleared all decoders");
+  $window->draw();
+  }
+
+sub command_callback_completions
+  {
+  my ($commandpart) = @_;
+
+  my $prefix = ($commandpart =~ /^no /)?'no var ':'var ';
+  my @c;
+
+  foreach (sort keys %variables)
+    {
+    my $cmd = $prefix . $_;
+    push @c, $cmd if (substr($cmd,0,length($commandpart)) eq $commandpart);
+    }
+
+  return @c;
+  }
 
 sub clear_variables
   {
@@ -109,7 +176,14 @@ sub update_variable
   {
   my ($var,$val) = @_;
 
-  $variables{$var} = $val;
+  if (defined $val)
+    {
+    $variables{$var} = $val;
+    }
+  else
+    {
+    delete $variables{$var};
+    }
 
   if (defined $listeners{$var})
     {

@@ -102,6 +102,13 @@ sub register_completions
   $completions{lc($prefix)} = $callback;
   }
 
+sub unregister_completions
+  {
+  my ($prefix) = @_;
+
+  delete $completions{lc($prefix)};
+  }
+
 sub command_issue
   {
   my ($command, $cui, $window) = @_;
