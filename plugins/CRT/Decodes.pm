@@ -235,4 +235,15 @@ sub decoder_stats
   return ($ndecoders,total_size(\%decoders));
   }
 
+################################################################################
+# Some utility functions
+
+sub choice
+  {
+  my ($val,%choices) = @_;
+
+  my $result = $choices{$val};
+  return (defined $result)?$result:$val;
+  }
+
 1;
