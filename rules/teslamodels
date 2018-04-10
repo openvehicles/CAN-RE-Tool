@@ -21,7 +21,7 @@ coverage ID:254 1,2,3,4,5,6
 # SPEED (regenbrakelight?)
 decoder ID:256 driving { (($d1==0x21)?'driving':'stopped',''); }
 decoder ID:256 regenbrakelight { (($d2==0x09)?'on':'off',''); }
-decoder ID:256 speed { ((($d4<<8)+$d3)/10,'mph'); }
+decoder ID:256 speed { (((($d4&0xf0)<<8)+$d3)/10,'mph'); }
 coverage ID:256 1,2,3,4
 
 # LIGHTS ?
@@ -33,8 +33,11 @@ decoder ID:26A whkm { (($d2<<8)+$d1,'wh/km'); }
 coverage ID:26A 1,2
 
 # CHARGE LEVEL
-decoder ID:2C8 soc { ($d2,'%'); }
-coverage ID:2C8 2
+#decoder ID:2C8 soc { ($d2,'%'); }
+#coverage ID:2C8 2
+decoder ID:302 soc { ((($d2>>2)+(($d3&0xf0)<<6))/10,'%'); }
+coverage ID:302 1 2 3
+
 
 # COUNTRY
 decoder ID:398 country { (chr($d1).chr($d2),''); }
