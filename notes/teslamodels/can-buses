@@ -1,0 +1,47 @@
+CHASSIS CAN Network
+  CANC-ABS                     Anti-Lock Braking System
+  CANC-PSC                     Power Steering Control
+  CANC-Centre-Display          Centre 17" Display
+  CANC-SCCM                    Steering Column Control Module
+  CANC-IC                      Instrument Cluster
+  CANC-CAMF                    ?Camera Front?
+  CANC-ASC                     Air Suspension Compressor
+  CANC-Body-Control-Module     Body Control Module
+  CANC-ORC                     Occupant Restraints Control
+  CANC-PARK-AID                Park Aid ECU #1
+  CANC-PARK-AID2               Park Aid ECU #2
+  CANC-TPMS-ECU                Tire Pressure Monitoring System ECU #1
+  CANC-TPMS-ECU-2              Tire Pressure Monitoring System ECU #2
+  CANC-EPB-ECU                 Electronic Parking Brake ECU
+  OBDII (pins 1+ and 9-)
+
+BODY CAN Network
+  CANB-Radio-Head-Unit         Radio Head Unit
+  CANB-Centre-Display          Centre 17" Display
+  CANB-PSR                     Sunroof Control Module
+  CANB-DCM-LH                  Door Control Module - LH
+  CANB-PSR-DIAG                Sunroof Control Module Diagnostics?
+  CANB-DCM-RH                  Door Control Module - RH
+  CANB-Body-Control-Module     Body Control Module
+  CANB-LGCM (optional PLG)     Liftgate Control Module
+
+BODY FAULT-TOLERANT CAN Network
+  CANA-Centre-Display          Centre 17" Display
+  CANA-PTC                     PTC Air Heater
+  CANA-RCCM                    Remote Climate Control Module
+  CANA-Memory-Seat-Module      Memory Seat Module
+
+POWERTRAIN CAN Network
+  CANP-DC-DC-HVJB              DC-DC High Voltage Junction Box
+  CANP-COMP                    HVAC Compressor
+  CANP-Thermal-Controller      Thermal Controller
+  CANP-HV-Battery-BMS          High Voltage Battery BMS
+  CANP-ACDC-Charge-Port        ACDC Charge Port
+  CANP-Charger1                Charger #1
+  CANP-Charger2                Charger #2
+  CANP-Drive-Inverter          Drive Inverter
+
+CENTRE DISPLAY OBDII CAN Network
+  CAND-Centre-Display          (pins 10+ and 20-)
+  OBDII                        (pins 6+ and 14-)
+

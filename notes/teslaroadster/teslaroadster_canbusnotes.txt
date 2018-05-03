@@ -1,0 +1,624 @@
+VDS Can bus Messages
+
+CREDIT
+
+; Thanks to Scott451 for figuring out many of the Roadster CAN bus messages used by the OVMS,
+; and the pinout of the CAN bus socket in the Roadster.
+; http://www.teslamotorsclub.com/showthread.php/4388-iPhone-app?p=49456&viewfull=1#post49456"]iPhone app
+
+; Thanks to fuzzylogic for further analysis and messages such as door status, unlock/lock, speed, VIN, etc.
+
+; Thanks to markwj for further analysis and messages such as Trip, Odometer, TPMS, etc.
+
+MESSAGES
+
+Status messages to the VDS are sent on CAN ID # 0x100. The first byte (B1) is a sub_message index. The bitrate is 1Mbps.
+A simplification of the messages you need and their interpretation is as follows:
+
+Bytes are numbered B1 to B8 not B0-B7
+bits are numbered bit0 to bit7
+Byte pairs are in little endian order (e.g B4*256+B3)
+
+Note: This is now the full list of messages seen on a 2011 Tesla Roadster 2.x, RHD. There are still quite a few
+      messages whose function is unknown, and these should be consider 'target' for further analysis.
+
+Here are some target information that should be on the bus, but are still unknown:
+
+		0. TRIP -> odometer
+		1. Direction (N, S, E, W, etc - as shown on VDS)       [ Got: MWJ Feb 2012 ]
+		2. Ambient temperature                                 [ Got: MS Jan 2012 ]
+		3. Other temperatures                                  [ Some got: MWJ Feb 2012 ]
+		4. Battery voltages, current, balancing, etc
+		5. Voltages and current on the different power lines
+		6. Gear (P, R, N, D)
+
+Tesla Roadster CAN Bus analysis:
+
+	Charge Timer VDS Feedback
+		B1=06	(timer/plugin setting and timer confirmation)
+
+			B2=1B   (timer/plugin setting)
+				B3=0x01
+				B4=0x00
+				B5=0x00/0x01 (0x00=plugin, 0x01=timer)
+				B6=0x00
+				B7=0x00
+				B8=0x00
+
+			B2=1A	(timer start hour)
+				B3=0x01
+				B4=0x00
+				B5=TimerLSB			(see id#102 B1=0x05 for details on this)
+				B6=TimerMSB			(see id#102 B1=0x05 for details on this)
+				B7=0x00
+				B8=0x00
+
+	UNKNOWN
+		B1=0x07
+			Samples:
+		         0.8604 100 07 64                      ->VDS (message to VDS 07)
+		         6.1950 100 07 64                      ->VDS (message to VDS 07)
+		        11.8922 100 07 64                      ->VDS (message to VDS 07)
+		        16.8903 100 07 64                      ->VDS (message to VDS 07)
+		        22.5657 100 07 64                      ->VDS (message to VDS 07)
+
+	UNKNOWN
+		B1=0x12
+			Samples:
+		       110.5122 100 12 03                      ->VDS (message to VDS 12)
+		       146.3122 100 12 03                      ->VDS (message to VDS 12)
+
+	Range
+		B1=0x80
+		B2=State of charge
+		B3=Ideal range LSB
+		B4=Ideal range MSB
+		B5=??
+		B6=??
+		B7=Estimated range LSB
+		B8=Estimated range MSB
+
+	Time
+		B1=0x81
+		B2=0x00
+		B3=0x00
+		B4=0x00
+		B5=Utime GMT LSB
+		B6=Utime GMT 
+		B7=Utime GMT 
+		B8=Utime GMT MSB
+
+	Ambient Temperature
+		B1=0x82
+                B2=Ambient Temperature (Celcius)
+
+	GPS_latitude
+		B1=0x83
+		B2=0x03 ??
+		B3=0x00
+		B4=0x00
+		B5=Latitude LSB
+		B6=Latitude 
+		B5=Latitude 
+		B5=Latitude MSB
+
+		
+	GPS_longitude
+		B1=0x84
+		B2=0x03 ??
+		B3=0x00
+		B4=0x00
+		B5=Longitude LSB
+		B6=Longitude 
+		B5=Longitude 
+		B5=Longitude MSB
+
+	GPS_lock
+		B1=0x85
+                B2=          00=nolock
+                             01=goodlock (based on gps satellite lock status)
+                B3=Direction LSB (unsigned 16bit integer, 0..360, in degrees)
+                B4=Direction MSB
+                B5=Altitude LSB (signed 16bit integer, in metres)
+                B6=Altitude MSB
+
+                N.B. Altitude is in metres, and may be negative. Car rounds to nearest 10m and has a floor of 0m.
+                     Directions 0 and 360 are the same (North) - seems to be a bug in the car's VMS, so treat 360 as 0.
+
+	UNKNOWN
+		B1=0x86
+			Samples:
+		         0.8119 100 86 00 88 01 10 FF FF FF    ->VDS (message to VDS 86)
+		        10.8908 100 86 03 87 01 59 F8 FF FF    ->VDS (message to VDS 86)
+		        20.9309 100 86 07 85 01 8D EC FF FF    ->VDS (message to VDS 86)
+		        31.0019 100 86 06 85 01 1F EE FF FF    ->VDS (message to VDS 86)
+		        41.0719 100 86 01 87 01 AE FD FF FF    ->VDS (message to VDS 86)
+
+	Charger settings
+		B1=0x88
+		B2=Charging current
+		B3=Charge duration in minutes LSB
+		B4=Charge duration in minutes MSB
+		B5=0xFF
+		B6=0xFF
+		B7=Charge limit
+
+	Charger interface
+		B1=0x89
+		B2=Car speed in miles/hour
+		B3=Vline LSB
+		B4=Vline MSB
+		B5=0x12-0x16 ?? 
+		B6=Iavailable(from pilot PWM)
+
+	UNKNOWN
+		B1=0x8B
+			Samples:
+		         0.8124 100 8B 01 E8 7E 18 22 19 2C    ->VDS (message to VDS 8B)
+		        10.8913 100 8B 10 C1 7E 18 22 19 2C    ->VDS (message to VDS 8B)
+		        20.9315 100 8B 01 20 7E 18 22 19 2C    ->VDS (message to VDS 8B)
+		        31.0025 100 8B 05 21 7E 18 22 19 2C    ->VDS (message to VDS 8B)
+		        41.0725 100 8B 10 C1 7E 18 22 19 2C    ->VDS (message to VDS 8B)
+
+	UNKNOWN
+		B1=0x8D
+			Samples:
+		         0.8127 100 8D 00 88 01 C3 00 C3 00    ->VDS (message to VDS 8D)
+		        10.8916 100 8D 00 87 01 C4 00 C1 00    ->VDS (message to VDS 8D)
+		        20.9317 100 8D 00 85 01 C2 00 C1 00    ->VDS (message to VDS 8D)
+		        31.0029 100 8D 00 85 01 C3 00 C0 00    ->VDS (message to VDS 8D)
+		        41.0727 100 8D 00 87 01 EA 00 9B 00    ->VDS (message to VDS 8D)
+
+        Error Notification
+                B1=0x93
+                B2=On, Off, Severity, etc, indication
+                B3=Error code LSB
+                B4=Error code MSB (error code 0xFFFF means no error)
+                B5=Data LSB
+                B6=Data
+                B7=Data
+                B8=Data MSB
+
+                N.B. Regarding B2, we've seen:
+                        0x01 = 00000001b = Show Alert
+                        0x00 = 00000000b = Cancel Alert
+                        0x05 = 00000101b = Show Alert
+                        0x04 = 00000100b = Cancel Alert
+                        0x15 = 00010101b = Show Message
+                        0x14 = 00010100b = End Message
+                     Suggestion is that bit0 is set when alert is raised, and zeroed when alert is cleared.
+
+	UNKNOWN
+		B1=0x94
+			Samples:
+		         0.8133 100 94 00                      ->VDS (message to VDS 94)
+		        10.8921 100 94 00                      ->VDS (message to VDS 94)
+		        20.9323 100 94 00                      ->VDS (message to VDS 94)
+		        31.0034 100 94 00                      ->VDS (message to VDS 94)
+		        41.0733 100 94 00                      ->VDS (message to VDS 94)
+
+	Charger V1.5
+		B1=0x95
+		B2=State 		(0x01=charging, 0x02=top off, 0x04=done, 0x0c=interrupted, 0x0d=preparing to charge, 0x0e=wait-schedule, 0x0f=heating 0x15-0x19=stopped charging)
+		B3=Sub State 		(2=scheduled start, 3=by request, 5=timerwait?, 7=connect power cable, 9=xxMinutes-yyKWHrs, 0x0d=interrupted)
+		B4=0x64			(percentage pre-heating complete)
+		B5=Mode 2008 		(0=standard, 1=storage,3=range,4=performance)
+		B6=Mode 2010 roadster	(0x= standard, 1x=storage,3x=range,4x=performance)
+		B7=0x16	??
+		B8=Total KWhrs Charged
+
+		N.B. state=0x0c, sub-state=0x0d has been seen as a 'external charger problem ID:1084' situation
+		with ground protection fault on an HPC.
+
+	Doors
+		B1=0x96
+		B2=	
+			bit0 = Left Door (open=1/closed=0)
+			bit1 = Right Door (open=1/closed=0)
+			bit2 = Charge port (open=1/closed=0)
+			bit3 = Pilot present (true=1/false=0) (always 1 on my 2.5)
+			bit4 = Charging (true=1/false=0)
+			bit5 = always 1 (N.B. maybe related to driving pawl - 1 in park, but perhaps 0 while driving???)
+			bit6 = Hand brake applied (true=1/false=0)
+			bit7 = Car ON (true=1/false=0)
+			
+		B3=
+			bit0 = always 0
+			bit1 = always 0
+			bit2 = always 0
+			bit3 = Lock status (locked=1/unlocked=0)
+			bit4 = Valet status (activated=1/unactivated=0)
+			bit5 = Headlights (on=1/off=0)
+			bit6 = Bonnet (open=1/closed=0) 
+			bit7 = Trunk (open=1/closed=0)
+			
+		B4=
+			bit1 = cooling pump (on=1/off=0)
+			
+		B5=
+			bit2 = alarm is sounding (on=1/off=0)
+
+		B6=0x18 pump starting 0x38 pump running
+
+	Odometer
+		B1=0x97
+		B5=Odometer LSB  \
+		B6=Odometer       | (in 1/10th miles)
+		B7=Odometer MSB  /
+
+	HVAC
+		HVAC message 0x8F and 0x9A are enabled with:
+			102 06 D0 07 00 00 80 00 08
+		and disabled with:
+			102 06 10 27 00 10 00 00 00
+
+	HVAC#1
+		B1=0x8F
+		B2=Toutside (outside temperature, celcius)
+		B3=Tmaxbrick (ESS temperature, celcius)
+		B4=Tcoolant (coolant temperature, celcius)
+		B5=Requested cooling %
+		B6=Received cooling %
+		B7= LSB \ Compressor RPM
+		B8= MSB /
+
+	HVAC#2
+		B1=0x9A
+                B2=?
+                B3=?
+                B4=?
+                B5=?
+                B6=? [ seems to be refrigerent pressure (scaled with ~/4) but not certain ]
+                B7=TcabinOutlet (celcius)
+                B8=? [ seems to be outside temperature (celcius) ]
+
+	UNKNOWN
+		B1=0x9B
+			Samples:
+		         0.8599 100 9B F9 01 41 08 FE 34 07    ->VDS (message to VDS 9B)
+		         6.1947 100 9B F9 01 41 0B FE 34 07    ->VDS (message to VDS 9B)
+		        11.8920 100 9B F9 01 41 05 FF 34 07    ->VDS (message to VDS 9B)
+		        16.8899 100 9B F9 01 41 08 00 35 07    ->VDS (message to VDS 9B)
+		        22.5656 100 9B F9 01 41 08 02 35 07    ->VDS (message to VDS 9B)
+
+	Trip
+		B1=0x9C
+		B3=Trip LSB  \ (in 1/10th miles)
+		B4=Trip MSB  /
+
+	UNKNOWN
+		B1=0x9D
+			Samples:
+		         0.8137 100 9D 00 7C 00 0D 17 01 00    ->VDS (message to VDS 9D)
+		        10.8926 100 9D 00 7C 00 0D 17 01 00    ->VDS (message to VDS 9D)
+		        20.9327 100 9D 00 7C 00 0D 17 01 00    ->VDS (message to VDS 9D)
+		        31.0041 100 9D 00 7C 00 0D 17 01 00    ->VDS (message to VDS 9D)
+		        41.0737 100 9D 00 7C 00 0D 17 01 00    ->VDS (message to VDS 9D)
+
+	ESS SOC DIAG Data
+		This complex message is sent in response to a "102 02" request.
+		Request id#102 06 D0 07 00 00 00 00 40
+		Response
+			100 9E 44 FD 9C 8A 5B 44 46
+			100 9F 00 00 00 00 00 B5 21
+			100 A0 3B 34 00 30 02 11 01
+			100 A1 01 41 0C 40 32 1C 00
+			100 A2 01 4B 00 4C FF 00 00
+			100 A1 02 29 0C 40 12 2D 00
+			100 A2 02 50 00 84 FF 00 00
+			100 A1 03 97 0B 41 35 36 00
+			100 A2 03 55 00 EA FF 00 00
+			100 A1 04 8B 0B 41 13 43 00
+			100 A2 04 53 00 0C 01 00 00
+			100 A1 05 87 0B 3F 07 47 00
+			100 A2 05 49 00 FF FF 00 00
+			100 A1 06 86 0B 3F 09 48 00
+			100 A2 06 49 00 3F FF 00 00
+		Decode
+			SOC LIM: 68% (0x44 single byte hex) - 100 9E (B2)
+			SOC MIN: 68% (0x44 single byte hex) - 100 9E (B7)
+			SOC MAX: 70% (0x46 single byte hex) - 100 9E (B8)
+			CAC: 156.99Ah - 100 9E (B4 . B3/256)
+			AR:91.54Ah - 100 9E (B6 . B5/256)
+			#Ah: 0.0Ah
+			#kWh: 0.00kWh
+			EVC: 3.7V
+			kWhR: 33.71kWh - 100 9F (B8 . B7/256)
+			RR: 123 miles (0x7B 0x00 tesla-style LSB-first, 2 byte hex) - maybe just from 100 80 (standard message)
+			dRMS: 52A (0x34 single byte hex) - 100 A0 (B4-MSB B3-LSB)
+			dAI: 560mO (0x30 0x02 tesla-style LSB-first, 2 byte hex) - 100 A0 (B6-MSB B5-LSB)
+			dWhM: 273Wh/mile (0x11 0x01 tesla-style LSB-first, 2 byte hex) - 100 A0 (B8-MSB B5-LSB)
+                The streaming can be cancelled with
+                Request id#102 06 00 00 00 00 00 00 40
+
+	Temps
+		B1=0xA3
+		B2=Tpem (celcius)
+		B3=Tmotor (celcius)
+		B7=Tbattery (celcius)
+
+	VIN	
+		B1=0xA4				(uses 3 CAN sub ID's)
+		B2=VIN 1st character
+		|
+		B8=VIN 7th character
+		
+		B1=0xA5				(uses 3 CAN sub ID's)
+		B2=VIN 8th character
+		|
+		B8=VIN 14th character
+		
+		B1=0xA6				(uses 3 CAN sub ID's)
+		B2=VIN 15th character
+		|
+		B4=VIN 17th character
+
+
+messages from the VDS are sent on CAN ID # 0x102.
+
+	Set Charge mode
+		B1=0x05 ??
+		B2=0x19
+		B3=0x00
+		B4=0x00
+		B5=Mode (0=standard, 1=storage,3=range,4=performance)
+		B6=0x00
+		B7=0x00
+		B8=0x00
+
+		N.B. Range mode warning message is "Range Mode limits power. Frequent use will reduce long-term battery life. Continue?"
+		N.B. Performance mode warning message is "Frequent use of Performance Mode will reduce long-term battery life. Continue?"
+
+	Set timer/plugin 
+		B1=05	(timer/plugin setting and timer confirmation)
+
+			B2=1B   (timer/plugin setting)
+				B3=0x00
+				B4=0x00
+				B5=0x00/0x01 (0x00=plugin, 0x01=timer)
+				B6=0x00
+				B7=0x00
+				B8=0x00
+
+			B2=1A	(timer start hour)
+				B3=0x00
+				B4=0x00
+				B5=TimerLSB		\
+				B6=TimerMSB		| (gmthour*60)-1, with special case midnight gmthour=24
+				B7=0x00
+				B8=0x00
+
+		N.B. Empirical values for TimerLSB and TimerMSB (a GMT+0800 car in Hong Kong) are:
+		     1439 (0x059F) for midnight GMT, 59 (0x003B) for 1am GMT, up to 1379 (0x0563) for 11pm GMT.
+
+	Start/Stop charge
+		B1=0x05
+		B2=0x03
+		B3=0x00
+		B4=0x00
+		B5=(Stop=0x00, Start=0x01)
+		B6=0x00
+		B7=0x00
+		B8=0x00
+
+	Set Charge Currrent
+		B1=0x05
+		B2=0x02
+		B3=0x00
+		B4=0x00
+		B5=current (10..…70 in decimal)
+		B6=0x00
+		B7=0x00
+		B8=0x00
+
+		N.B. Normal increments are 10,13,16,24,32,40,48,56,63,70
+
+	Wake Up car				Should car be sleeping (pump off), this will wake it up
+		B1=0x0A
+
+	UNKNOWN
+		B1=0x06
+			Samples:
+		         0.4166 102 06 10 27 00 10 00 00 00    VDS-> (message from VDS 06)
+		         5.9171 102 06 10 27 00 10 00 00 00    VDS-> (message from VDS 06)
+		        11.4773 102 06 10 27 00 10 00 00 00    VDS-> (message from VDS 06)
+		        17.0587 102 06 10 27 00 10 00 00 00    VDS-> (message from VDS 06)
+		        22.5380 102 06 10 27 00 10 00 00 00    VDS-> (message from VDS 06)
+
+			On switch to TRIP screen:
+				102,06,10,27,00,00,09,10,00
+				102,06,D0,07,00,00,01,80,00
+			On switch to TEMP screen:
+				102,06,10,27,00,00,01,80,00
+				102,06,2C,01,00,00,09,10,00
+			On switch to BATTERY screen
+				102,06,10,27,00,00,09,10,00
+				102,06,E8,03,00,00,01,00,00
+			On switch to GRAPH energy use screen
+				102,06,10,27,00,00,01,00,00
+				102,06,64,00,00,40,00,00,00
+
+			Investigating:
+			Car seems to suppress the id#100 B1=A3 temperature message until the TEMP screen is brought up.
+			Tried to send the 102,06,D0,07,00,00,01,80,00 message, and that appeared to start id#100 B1=A3 temperature message transmission.
+
+	Lock/Unlock
+		B1=0x0B
+		B2=	0x00 = Activate Valet mode
+			0x01 = Deactivate Valet mode
+			0x02 = Lock car
+			0x03 = unlock car
+			0x04 = PIN related (have to investigate more)
+		B3=0x00
+		B4=0x00
+		B5= PIN LSB
+		B6= PIN
+		B7= PIN (total 28 bits for PIN)
+		B8= PIN MSB	4 bits = number of PIN characters (1-8)
+				4 LSB bits = PIN MSB
+
+		N.B. example PIN 1234 unlock is 0x0B, 0x03, 0x00, 0x00, 0xD2, 0X04, 0x00, 0x40
+		N.B. unlock/lock does not affect the immobilizer+alarm (when fitted)
+
+	Home Link
+		B1=0x09
+		B2=0x00
+		B3=Homelink device (0x00, 0x01 or 0x02)
+
+		N.B. mstegen is also seeing another message on the CAN bus just before this message, 0x09 0x02 0x00, not sure if it's important.
+		     markwj suspects perhaps some sort of wakeup message.
+
+	Lock/Unlock result
+		B1=0x0E
+		B2=result (0x04=locked, 0x05=unlocked)
+
+	Sequence Notes:
+		Some unusual behavior was noticed when trying to send a START CHARGE command to a sleeping car.
+		The car got into a mode where the VDS said "Preparing to charge" and "CONNECT POWER CABLE" and charge would not start.
+		Waking up the car (either VDS or pressing a door handle) would start the charge.
+		It appears that with the car plugged in but not charging, the VMS (or some other part of the car) can go to sleep
+		(signified by the cooling pump being off) while the VDS is still on. Sending the START CHARGE command in such a mode
+		causes the problem. Observing the VDS behavior when starting a charge on a sleeping car we find:
+			0ms   id#102 0x05, 0x03, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00
+			150ms id#102 0A
+		Sending id#102 B1=0x0A (a single byte message) on the bus indeed wakes up the car (pump starts).
+		So, the sequence for START CHARGE should be:
+			0ms   id#102 0x05, 0x03, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00
+			150ms id#102 0x0A
+		For STOP CHARGE, this should not be necessary (as the car should already be awake if it is charging).
+
+Other miscellaneous messages seen on the bus:
+
+
+	ID# 0x1A0, samples:
+	         4.4623 1A0 00 00 00 00                      
+	         5.4829 1A0 00 00 00 00                      
+	         6.5070 1A0 00 00 00 00                      
+	         8.3517 1A0 00 00 BB 02                      
+	         8.5421 1A0 00 00 BB 02 
+
+	ID# 0x280, samples:
+	         0.2078 280 00 00 03 00 00 00 00 00          
+	         0.4112 280 00 00 03 00 00 00 00 00          
+	         1.4106 280 00 00 03 00 00 00 00 00          
+	         2.6618 280 00 00 0E 00 00 00 00 00          
+	         3.4418 280 00 00 0C 00 00 00 00 00          
+
+	ID# 0x343, samples:
+	         0.0942 343 00 00 04 00 00 0A 20 F0          
+	         1.2422 343 00 00 04 00 00 0A 20 F0          
+	         2.5029 343 00 00 04 00 00 0B 20 F0          
+	         3.5395 343 00 00 04 00 00 0A 20 F0          
+	         4.6872 343 00 00 04 00 00 0A 20 F0          
+
+	ID# 0x345, samples:
+	         0.0963 345 00 00 00 00 00 00 00 00          
+	         1.2444 345 00 00 00 00 00 00 00 00          
+	         2.5049 345 00 00 01 01 00 00 00 00          
+	         3.5416 345 00 00 00 01 00 00 00 00          
+	         4.6893 345 00 00 00 01 00 00 00 00          
+
+	ID# 0x420, samples:
+	         0.2064 420 00 90 90                         
+	         0.4099 420 00 90 90                         
+	         1.4100 420 00 90 90                         
+	         2.6611 420 00 90 90                         
+	         3.4405 420 00 90 90                         
+		...
+	        77.7055 420 00 90 90                         
+	        78.5770 420 00 90 90                         
+	        79.7439 420 00 8E 8E                         
+	        80.6290 420 00 8E 8E                         
+	        81.7542 420 00 8E 8E                         
+	        82.6665 420 00 8E 8E                         
+	        83.6554 420 00 8E 8E                         
+	        84.8489 420 00 8E 8E                         
+	        85.6947 420 00 90 90                         
+	        86.7171 420 00 8E 8E                         
+
+	ID# 0x588, samples:
+	         0.2070 588 00 00 84                         
+	         0.4105 588 00 00 84                         
+	         1.4103 588 00 00 84                         
+	         2.6615 588 00 00 84                         
+	         3.4412 588 00 00 84                         
+
+	ID# 0x590, samples:
+	         0.2097 590 01 00 00 00 00 00 00 00          
+	         0.4124 590 01 00 00 00 00 00 00 00          
+	         1.4112 590 01 00 00 00 00 00 00 00          
+	         2.6625 590 01 00 00 00 00 00 00 00          
+	         3.4430 590 01 00 00 00 00 00 00 00          
+		...
+	        57.4447 590 01 00 BB 02 00 00 00 00          
+	        58.1744 590 01 00 A4 03 00 00 00 00          
+	        59.4840 590 01 00 8D 04 00 00 00 00          
+	        60.2158 590 01 00 76 05 00 00 00 00          
+	        61.5043 590 01 00 76 05 00 00 00 00          
+	        62.6636 590 01 00 76 05 00 00 00 00          
+	        63.2745 590 01 00 5F 06 00 00 00 00          
+	        64.6831 590 01 00 76 05 00 00 00 00          
+	        65.5769 590 01 00 5F 06 00 00 00 00          
+	        66.6634 590 01 00 76 05 00 00 00 00          
+	        67.5746 590 01 00 5F 06 00 00 00 00          
+	        68.3660 590 01 00 5F 06 00 00 00 00          
+	        69.5945 590 01 00 76 05 00 00 00 00          
+	        70.4104 590 01 00 76 05 00 00 00 00          
+	        71.6246 590 01 00 76 05 00 00 00 00          
+	        73.2812 590 01 00 76 05 00 00 00 00          
+
+messages from the TPMS are sent on CAN ID #0x344
+
+	TPMS status
+		B1=f-l psi*2.755
+		B2=f-l temp+40Celcius
+		B3=f-r psi/2.755
+		B4=f-r temp+40Celcius
+		B5=r-l psi*2.755
+		B6=r-l temp+40Celcius
+		B7=r-r psi*2.755
+		B8=r-r temp+40Celcius
+
+some other odometer messages have been seen on CAN ID #0x402
+
+	ODOMETER
+		B1=0xFA
+		B4=Odometer LSB   \
+		B5=Odometer        | (in 1/10th miles)
+		B6=Odometer MSB   /
+		B7=Trip LSB    \ (in 1/10th miles)
+		B8=Trip MSB    /
+
+Some messages have been seen on CAN ID #0x400
+
+	UNKNOWN
+		B1=0x01
+			Samples:
+		         0.0484 400 01 01 00 00 00 00 4C 1D          
+		         0.1487 400 01 01 00 00 00 00 4C 1D          
+		         0.2486 400 01 01 00 00 00 00 4C 1D          
+		         0.3486 400 01 01 00 00 00 00 4C 1D          
+		         0.4486 400 01 01 00 00 00 00 4C 1D          
+
+                N.B. Suggestion is that 4th byte of 0x400 B1=0x01 is the PRND gear selection
+
+	DASHBOARD
+		B1=0x02 Data to dashboard
+		B2=Battery graph (00-2F is full range, left 2 bits seem to be 10)
+		B3=AMPS LSB
+		B4=AMPS MSB (in LSN), MSN seems to be b1000
+		B5=Range LSB
+		B6=Range MSB (in LSN), MSN seems to be b1000
+		B7=Miles/Km legend switch - known values are 00=miles, 55=km
+		B8=0x00
+
+	UNKNOWN
+		B1=0x03
+			Samples:
+		         0.5484 400 03 29 6C 00 00 00 77 00          
+		         2.5990 400 03 29 6C 00 00 00 77 00          
+		         4.6386 400 03 29 6C 00 00 00 77 00          
+		         6.6384 400 03 29 6C 00 00 00 77 00          
+		         8.6605 400 03 29 6C 00 00 00 77 00          
+
+Any additions/corrections are welcome

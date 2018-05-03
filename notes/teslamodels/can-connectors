@@ -1,0 +1,52 @@
+X437 CAN Diag
+
+1  CANP-H  PowerTrain Network
+2  CANA-H  Body Fault-Tolerant Network
+3  K-Line  OBD-II K-line (pin #7)
+4  CANC-H  Chassis Network
+5  CANB-H  Body CAN Network
+6  CANP-L  PowerTrain Network
+7  CANA-L  Body Fault-Tolerant Network
+11 CANC-L  Chassis Network
+12 CANB-L  Body CAN Network
+
+X437A CAN Diag (newer cars)
+
+1  12V/5A  (F219)
+2  CANA+   CAN4+ Body Fault
+3  CANA-   CAN4- Body Fault
+6  K-Line  K-line
+9  CANB-H  CAN2+ Body
+10 CANB-L  CAN2- Body
+13 CANC-H  CAN6+ Chassis
+14 CANC-L  CAN6- Chassis
+18 CANP-H  CAN3+ Powertrain
+19 CANP-L  CAN3- Powertrain
+20 GND
+
+   Maybe: https://www.theplugdealer.com/shop/product/3451-12741nya20f-l-sumitomo-6098-5629-0-64ii-1-5-unsealed-20-position-female-housing-blue-18222
+
+   (Connector PIN view)
+   1 --- 12 (big pins)
+   2 --- 13
+   3 --- 14
+   4 --- xx (keyway)
+   5 --- 15
+   6 --- 16
+   7 --- 17
+   8 --- xx (keyway)
+   9 --- 18
+   10 --- 19
+   11 --- 20 (big pins)
+
+OBD-II
+
+1  CANC-H      (chassis CAN network)
+4  GND
+5  GND
+6  CAND-H      To Centre display (X429 pin 10)
+7  K-Line      Serial
+9  CANC-L      (chassis CAN network)
+14 CAND-L      To Centre Display (X429 pin 20)
+16 +12V        Battery
+
