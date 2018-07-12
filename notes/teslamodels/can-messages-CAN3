@@ -36,6 +36,13 @@ unique 508 1
 decoder ID:165 brakepedalpos { (($d2<<8)+$d1,'%'); }
 coverage ID:165 1,2
 
+# 222/28C notes
+# I think 222 ($D2<<8)+$D1 is AC watts charging (both chargers)
+#   Seeing 55 2C for 40A, and C0 19 for 32A, at around 220V
+# Then, 28C (($D2<<8)+$d1)/256 is AC voltage during charging
+# Charge current can then be calculated by watts/voltage
+# Also a charging AC watts of 0 would mean not charging, and !=0 would mean charging
+
 # PACK info (chargingrate??)
 decoder ID:222 chargingrate { ((($d2<<8)+$d1)/100,'kph'); }
 decoder ID:222 essvoltage { ((($d4<<8)+$d3)/100,'V'); }
