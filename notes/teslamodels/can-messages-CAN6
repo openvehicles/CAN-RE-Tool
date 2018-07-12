@@ -1,0 +1,203 @@
+CAN6 CHASSIS CAN Network
+  CANC-ABS                     Anti-Lock Braking System
+  CANC-PSC                     Power Steering Control
+  CANC-Centre-Display          Centre 17" Display
+  CANC-SCCM                    Steering Column Control Module
+  CANC-IC                      Instrument Cluster
+  CANC-CAMF                    ?Camera Front?
+  CANC-ASC                     Air Suspension Compressor
+  CANC-Body-Control-Module     Body Control Module
+  CANC-ORC                     Occupant Restraints Control
+  CANC-PARK-AID                Park Aid ECU #1
+  CANC-PARK-AID2               Park Aid ECU #2
+  CANC-TPMS-ECU                Tire Pressure Monitoring System ECU #1
+  CANC-TPMS-ECU-2              Tire Pressure Monitoring System ECU #2
+  CANC-EPB-ECU                 Electronic Parking Brake ECU
+  OBDII (pins 1+ and 9-)
+
+CAN Bus Speed: 500kbps (rumoured)
+
+########################################################################
+## Liam
+########################################################################
+#
+# http://www.instructables.com/id/Exploring-the-Tesla-Model-S-CAN-Bus/
+
+CAN6 ID’s
+List:
+001
+003 [8]
+E [8]
+101
+128 [4]
+150 [8]
+155 [8]
+168 [7]
+175 [8]
+185 [8]
+201 [5]
+204 [8]
+208 [4] counter
+218 [8] slow refresh
+227 [3]
+228 [2] counter
+248 [4] counter
+304 [8]
+307 [8]
+308 [8]
+309 [3]
+314 [8]
+317 [8]
+
+ID’s when resting:
+  3
+  E
+ 45
+ 6D
+ 94
+204
+208
+218
+228
+2B9
+318
+32C
+32D
+348
+35D
+378
+399
+39D
+3B9
+404
+405
+406
+408
+40A
+418
+488
+534
+537
+
+list from CAN sniffer
+45
+6D
+94
+108
+22E
+115
+118
+11B
+125
+135
+145
+148
+150
+155
+175
+185
+201
+204
+208
+228
+22E
+23E
+248
+2B5
+2B9
+31E
+325
+32E
+33E
+348
+34E
+35E
+368 [8]
+385 [6]
+3B5 [8]
+3B8 [8]
+405
+406
+408 [1]
+418
+488 [4]
+714 [8]
+717
+764
+
+
+Decodes:
+
+ID 003 [8] - Steering Wheel
+file: candump-2015-05-06_003028.log
+starting at center all the way left, then right, then back.
+First four change with rotation
+
+ID 128 [4]
+D1: 03
+D2: 00
+D3: FF
+D4: FF
+
+ID 218:
+D1: 50
+D2: 54 
+D3: 15 
+D4: 00 
+D5: 00
+D6: C0
+D7: 00 - F0 in increments of ten
+D8: 09, 19, 29 ,39 49 69,79, 89, 99, A9, B9, C9, D9, E9, F9
+
+20A [8] - related to brake pedal
+D1: A5 brake off, A9 brake on
+D2: F4
+D3: 3A brake off, 7A brake on 
+D4:
+D5: 
+D6: 
+D7: 00
+D8: 00
+
+3B5 [8] - goes through 4 cycles with all 55’s then zeros then repeats, D1 counts up to 4
+D1: 01,02,03,04
+D2: 55
+D3: 55
+D4: 55
+D5: 55
+D6: 55
+D7: 55
+D8: 55
+
+Other notes:
+
+405 [8] - VIN Number contained in the 7 digits, first digit doesn’t appear to be related
+
+268, looks like a temperature on byte 3
+
+412, data on 6 bytes, rolling and repeat on total of 16*6=96 bytes (after some research it appears not to be the VIN)
+
+7E2, counter + data, looks promising
+
+302, related to supercharging
+
+ID266 bit 1
+Lights on, DRL running. on = 89 off = 8A.
+
+Lights on, no DRL. off = 89 on = 88
+
+ID268: Please see update in the post below
+
+ID 268 Climate
+
+bit 1 00=off 55=on 01=noise?
+bit 2 00, 193, 232 7
+bit 3 26 4D 74 9B C1 E8 07 26 45 68 87 A6 C9 2A 49 48 68 67 8B 8A AA A9
+bit 4 Possible fan, 00 ramps to 02 then back, consistent with fan sound
+bit 5 C1, C2, C3, C4 (193 194 195 196 in Decimal) possibly very steady temp in °C maybe 19.3?
+bit 6 Also maybe fan 00 01 02 03 04 05 06 07 08 or outside temp
+bit 7 Most likely set temperature in °C
+bit 8 sample 00 40 50 60 70 80 90 A0 B0 C0 D0 EO 00 10
+
+Also, after more research it appears that ID 268 is not related to the climate control.
+

@@ -1,0 +1,138 @@
+CAN2 BODY CAN Network
+  CANB-Radio-Head-Unit         Radio Head Unit
+  CANB-Centre-Display          Centre 17" Display
+  CANB-PSR                     Sunroof Control Module
+  CANB-DCM-LH                  Door Control Module - LH
+  CANB-PSR-DIAG                Sunroof Control Module Diagnostics?
+  CANB-DCM-RH                  Door Control Module - RH
+  CANB-Body-Control-Module     Body Control Module
+  CANB-LGCM (optional PLG)     Liftgate Control Module
+
+CAN Bus Speed: 125kbps (rumoured)
+
+########################################################################
+## Liam:
+########################################################################
+
+Bus is running at 125K
+
+* Radio Head Unit 2FF Station Name, 36F, 3A8, 37F
+* Door Control 229, 22A
+* Sunroof 21E, 20E, 22E, 208
+Front Trunk 203, 213, 214,
+
+ID209 - Mirror Open (same for each side 209-20A)
+D1: 50 
+D2: 20 open, 60 closed, 80 opening/closing
+D3: see turn signal section
+D4: 00
+D5: 80
+D6: 00
+
+
+ID209 - Right turn signal
+D1: 50
+D2: 20
+D3: 00 off, 40 blinking
+D4: 00
+D5: 80
+D6: 00
+
+ID20A - Left turn signal
+D1: 50
+D2: 20
+D3: 00 off, 40 blinking
+D4: 00
+D5: 80
+D6: 00
+
+ID203 - Hazard Flashers
+D1: 00 
+D2: 09 off, 49 Flashers on
+D3: 00 
+D4: 22 
+D5: 00 
+D6: 00 
+D7: 37 
+D8: FF
+
+
+ID504 - Car Lights Auto to On
+D1: 55
+D2: 10
+D3: 40
+D4: 00
+D5: interior lights 3C on, 38 off
+D6: 81
+D7: 00
+D8: 05
+
+ID504 - Car Lights On to Parking
+D1: 55
+D2: 00
+D3: 00
+D4: 00
+D5: 00
+D6: 01
+D7: 00
+D8: 05
+
+ID504 - Brake related
+D1: 55 on, 00 off
+D2: 40 on, 00 off
+D3: 00
+D4: 00
+D5: 44 on, 00 off
+D6: 14
+D7: 00
+D8: 10 on, 00 off
+
+ID238 Dome Lights On
+D1: 05
+D2: 00 off, 40 on, 80 auto
+D3: 00
+D4: 00
+D5: 00
+D6: 00
+D7: 00
+D8: 00
+
+
+Drivers side windows not showing up on the CAN2 Bus
+
+ID50A - Passenger Front Window
+D1: 00
+D2: 01 Child Lock Off, 00 Child Lock On, 11 Down, 0D Up, 09 Auto Down, 05 Auto up
+D3: 00
+D4: 00
+
+ID50A - Passenger Back Window
+D1: 00
+D2: 01 Child Lock Off, 00 Child Lock On, 81 Down, 61 Up, 41 Auto Down, 21 Auto up
+D3: 00
+D4: 00
+
+ID568 Rolling VIN
+
+ID List
+304  
+36F
+403
+404
+407
+408
+409
+40A
+40B  
+20D
+234
+248
+304
+403
+404
+407
+408
+409
+40A
+40B
+

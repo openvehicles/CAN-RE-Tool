@@ -1,0 +1,183 @@
+CAN3 POWERTRAIN CAN Network
+  CANP-DC-DC-HVJB              DC-DC High Voltage Junction Box
+  CANP-COMP                    HVAC Compressor
+  CANP-Thermal-Controller      Thermal Controller
+  CANP-HV-Battery-BMS          High Voltage Battery BMS
+  CANP-ACDC-Charge-Port        ACDC Charge Port
+  CANP-Charger1                Charger #1
+  CANP-Charger2                Charger #2
+  CANP-Drive-Inverter          Drive Inverter
+
+CAN Bus Speed: 500kbps (confirmed)
+
+########################################################################
+## Jason
+########################################################################
+
+https://skie.net/uploads/TeslaCAN/Tesla%20Model%20S%20CAN%20Deciphering%20-%20v0.1%20-%20by%20wk057.pdf
+
+########################################################################
+## Arthur Herbert
+########################################################################
+
+https://teslamotorsclub.com/tmc/threads/reading-battery-voltages-and-temperatures-via-can-on-model-s.60509/
+
+BMS CAN message ID 6F2. This message is sent in a sequence of actually 32 sequential messages indexed 0x01 through 0x1F in byte 0that form a very interesting matrix. The remaining 7 bytes form a bit-packed matrix listing ALL the 96 individual cell voltages in the battery pack as well as 32 temperatures - two temperatures for each of the 16 modules in the Tesla Model S battery pack. These are 13-bit values that appear to be really quite accurate. We consider Tesla's BMS a pretty authoritative source for this sort of thing.
+
+########################################################################
+## OVMS
+########################################################################
+
+# Tesla Model S Rules file...
+
+unique 508 1
+
+# BRAKE pedal position
+decoder ID:165 brakepedalpos { (($d2<<8)+$d1,'%'); }
+coverage ID:165 1,2
+
+# PACK info (chargingrate??)
+decoder ID:222 chargingrate { ((($d2<<8)+$d1)/100,'kph'); }
+decoder ID:222 essvoltage { ((($d4<<8)+$d3)/100,'V'); }
+coverage ID:222 1,2,3,4
+
+# GEAR, ACCELERATOR, POWER
+decoder ID:254 gear { (&choice($d1,0x00,'off',0x04,'park',0x0c,'neutral',0x08,'reverse',0x10,'drive'),''); }
+decoder ID:254 brake { (($d2==0x10)?'on':'off',''); }
+decoder ID:254 accelpos { (($d4<<8)+$d3,'%'); }
+decoder ID:254 powerregen { ((($d6<<8)+$d5)/100,'kW'); }
+coverage ID:254 1,2,3,4,5,6
+
+# SPEED (regenbrakelight?)
+decoder ID:256 driving { (($d1==0x21)?'driving':'stopped',''); }
+decoder ID:256 regenbrakelight { (($d2==0x09)?'on':'off',''); }
+decoder ID:256 speed { (((($d4&0xf0)<<8)+$d3)/10,'mph'); }
+coverage ID:256 1,2,3,4
+
+# LIGHTS ?
+decoder ID:266 lights { (&choice($d1,0x89,'on',0x8a,'off'),''); }
+coverage ID:266 1
+
+# WH/KM ????
+decoder ID:26A whkm { (($d2<<8)+$d1,'wh/km'); }
+coverage ID:26A 1,2
+
+# CHARGE LEVEL
+#decoder ID:2C8 soc { ($d2,'%'); }
+#coverage ID:2C8 2
+decoder ID:302 soc { ((($d2>>2)+(($d3&0xf0)<<6))/10,'%'); }
+coverage ID:302 1 2 3
+
+# COUNTRY
+decoder ID:398 country { (chr($d1).chr($d2),''); }
+coverage ID:398 1,2
+
+# 3D2: 2x 4 byte counters, count up when on
+#    total Kwh used???
+#    2B 5A 23 00 D4 0A 26 00
+
+# VIN
+decoder ID:508:00 vin1 { (chr($d2).chr($d3).chr($d4).chr($d5).chr($d6).chr($d7).chr($d8),''); }
+decoder ID:508:01 vin2 { (chr($d2).chr($d3).chr($d4).chr($d5).chr($d6).chr($d7).chr($d8),''); }
+decoder ID:508:02 vin3 { (chr($d2).chr($d3).chr($d4),''); }
+coverage ID:508:00 1,2,3,4,5,6,7,8
+coverage ID:508:01 1,2,3,4,5,6,7,8
+coverage ID:508:02 1,2,3,4
+
+########################################################################
+## Liam
+########################################################################
+
+CAN3 - Battery charged to 89%
+
+2C8 - Battery related
+
+Charge limit when at max charge
+D1: 2E
+D2: E8
+D3: 03
+D4: 88
+D5: 00
+D6: 00
+D7: counter
+D8: counter
+
+charge limit when at recommended rating
+D1: 6E
+D2: 89
+D3: 03
+D4: 89
+D5: 00
+D6: 00
+D7: counter
+D8: counter
+
+charge limit when at middle
+D1: 6E
+D2: 0D
+D3: 02
+D4: 89
+D5: 00
+D6: 00
+D7: counter
+D8: counter
+
+charge limit when at first tick from middle
+D1: 6E
+D2: 6C
+D3: 02
+D4: 89
+D5: 00
+D6: 00
+D7: counter
+D8: counter
+
+second tick after middle
+D1: 6E
+D2: CB
+D3: 02
+D4: 89
+D5: 00
+D6: 00
+D7: counter
+D8: counter
+
+third tick after middle
+D1: 6E
+D2: 2A
+D3: 03
+D4: 89
+D5: 00
+D6: 00
+D7: counter
+D8: counter
+
+recommended range and scheduled charge ON set to 12am
+D1: 66
+D2: 89
+D3: 03
+D4: 88
+D5: 00
+D6: 00
+D7: counter
+D8: counter
+
+charging at 80A 238-237V 52mi/h
+ID 222 length [7] 
+when charging, set a little higher than recommended range
+D1: 13
+D2: 25
+D3: A8, A9, A2, AB, AA
+D4: 9C 9D
+D5: F0
+D6: 10, 40, 50
+D7: 70
+
+finished charging 242mi or 92%
+D1: 00
+D2: 00
+D3: 61, 62, 63, 5F, 5C
+D4: 99
+D5: F0
+D6: 10
+D7: 70
