@@ -1,0 +1,147 @@
+DBC in a nutshell
+by Mark Webb-Johnson
+
+Codes:
+  BU_ Network Node
+  BO_ Message
+  SG_ Signal
+  EV_ Environment Variable
+
+Structure:
+
+  01] version
+
+      VERSION " ... "
+
+  02] new_symbols
+
+      _NS : CM_ BA_DEF_ BA_ VAL_ CAT_DEF_ CAT_ FILTER BA_DEF_DEF EV_DATA_
+            ENVVAR_DATA SGTYPE_ SGTYPE_VAL_ BA_DEF_SGTYPE_ BA_SGTYPE_
+            SIG_TYPE_REF_ VAL_TABLE_ SIG_GROUP_ SIG_VALTYPE_ SIGTYPE_VALTYPE_
+            BO_TX_BU_ BA_DEF_REL_ BA_REL_ BA_DEF_DEF_REL_ BU_SG_REL_ BU_EV_REL_
+            BU_BO_REL_
+
+  03] bit_timing
+
+      BS_ : <baudrate>:BTR1,BTR2
+
+  04] nodes
+
+      BU_ : <node_name>
+
+      * node_name is a C style identifier
+
+  05] value_tables
+
+      VAL_TABLE_ <value_table_name> { <value_description> } ;
+
+      <value_description> ::= <double> <char_string>
+
+  06] messages
+
+      BO_ <message_id> <message_name> : <message_size> <transmitter_node_name>
+        SG_ <signal_name> <multiplexor_indicator> :
+            <start_bit> | <signal_size> @ <byte_order> <value_type>
+            ( <factor>,<offset> ) [ <minimum> | <maximum> }
+            <unit> <receiver> , <receiver> , ...
+
+      * message_id is the decimal message ID
+      * message_name is a C style identifier
+      * transmitter_node_name is the BU_ node name, or "Vector__XXX"
+      * signal_name is a C style identifier
+      * multiplexor_indicator is
+        'M' the multiplexor switch (only one signal within a message can be this)
+        'm' <integer> is a multiplexed signal
+      * start_bit is the bit offset within the CAN data frame
+      * signal_size is the number of bits in the signal
+      * byte_order is
+        0 for little endian
+        1 for big endian
+      * value_type is
+        + for unsigned
+        - for signed
+      * factor and offset define the conversion rule
+          physical_value = (raw_value * factor) + offset
+      * minimum and maximum define the range of value physical_value for the signal
+      * unit is a textual string denoting the unit of the physical_value
+      * receiver is the receiving node, or "Vector__XXX"
+      * Signals with value types 'float' or 'double' use
+        signal_extended_value_type_list for further information
+
+  07] message_transmitters
+
+      BO_TX_BU_ <message_id> : {} <transmitter> ;
+
+      * Used to define multiple transmitter nodes of a single node
+      * Not required for CAN decode
+
+  08] environment_variables
+
+      EV_ <env_var_name> " <env_var_type> [<minimum>|<maximum>]
+          <unit> <initial_value> <ev_id>
+          <access_type> <access_node> {,<access_node>} ;
+
+      * env_var_type is
+        0 for integer
+        1 for float
+        2 for string
+      * minimum and maximum are doubles
+      * initial_value is a double
+      * ev_id is an unsigned integer (and is obsolete)
+      * access_type is
+        DUMMY_NODE_VECTOR0
+        DUMMY_NODE_VECTOR1
+        DUMMY_NODE_VECTOR2
+        DUMMY_NODE_VECTOR3
+      * access_node is node_name or "VECTOR_XXX"
+
+  09] value_descriptions
+
+      VAL_ <message_id> <signal_name> { <value_description> } ;
+      VAL_ <env_var_name> { <value_description> } ;
+
+      * Similar to value_tables, but for specific messages/env_var
+
+  10] signal_types (not normally used)
+
+      SGTYPE_ <signal_type_name> : <signal_size> @ <byte_order>
+              <value_type> (<factor>,<offset>) [<minimum>|<maximum>]
+              <unit> <default_value> , <value_table> ;
+
+  11] signal_groups
+
+      SIG_GROUP_ <message_id> <signal_group_name>
+                 <repetitions> : { <signal_name> } ;
+
+      * Used to define a group of signals within a message. Such as to
+        define signals that have to be updated in common
+
+  12] comments
+
+      CM_ <char_string>
+        | BU_ <node_name> <char_string>
+        | BO_ <message_id> <char_string>
+        | SG_ <message_id> <char_string>
+        | EV_ <env_var_name> <char_string>
+        ;
+
+  attribute_definitions
+  sigtype_attr_list (not normally used)
+  attribute_defaults
+  attribute_values
+  value_descriptions
+  category_definitions (obsolete) (not normally used)
+  categories (obsolete) (not normally used)
+  filter (obsolete) (not normally used)
+  signal_type_refs (not normally used)
+
+  xx] signal_extended_value_type_list (not normally used)
+
+      SIG_VALTYPE_ <message_id>
+        <signal_name> <signal_extended_value_type> ;
+
+      * signal_extended_value_type is
+        0 for signed or unsigned integer
+        1 for 32bit IEEE floating point
+        2 for 64bit IEEE double
+
