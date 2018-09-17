@@ -121,7 +121,7 @@ Structure:
       CM_ <char_string>
         | BU_ <node_name> <char_string>
         | BO_ <message_id> <char_string>
-        | SG_ <message_id> <char_string>
+        | SG_ <message_id> <signal_name> <char_string>
         | EV_ <env_var_name> <char_string>
         ;
 
