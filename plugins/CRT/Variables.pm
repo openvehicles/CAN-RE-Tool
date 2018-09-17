@@ -187,7 +187,7 @@ sub update_variable
 
   if (defined $listeners{$var})
     {
-    foreach (sort keys $listeners{$var})
+    foreach (sort keys %{$listeners{$var}})
       {
       my $id = $_;
       my $o = $listeners{$var}{$id};
