@@ -44,9 +44,12 @@ coverage ID:165 1,2
 # Also a charging AC watts of 0 would mean not charging, and !=0 would mean charging
 
 # PACK info (chargingrate??)
-decoder ID:222 chargingrate { ((($d2<<8)+$d1)/100,'kph'); }
+decoder ID:222 chargingpower { ((($d2<<8)+$d1),'w'); }
 decoder ID:222 essvoltage { ((($d4<<8)+$d3)/100,'V'); }
 coverage ID:222 1,2,3,4
+
+decoder ID:28C chargingvoltage { ((($d2<<8)+$d1)/256,'A'); }
+coverage ID:28C 1,2
 
 # GEAR, ACCELERATOR, POWER
 decoder ID:254 gear { (&choice($d1,0x00,'off',0x04,'park',0x0c,'neutral',0x08,'reverse',0x10,'drive'),''); }
