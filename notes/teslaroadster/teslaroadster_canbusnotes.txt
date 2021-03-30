@@ -579,46 +579,96 @@ messages from the TPMS are sent on CAN ID #0x344
 		B7=r-r psi*2.755
 		B8=r-r temp+40Celcius
 
-some other odometer messages have been seen on CAN ID #0x402
+Instrument Cluster -> VMS on CAN ID #0x402
 
 	ODOMETER
 		B1=0xFA
+                B2=Status LSB
+                B3=Status MSB
 		B4=Odometer LSB   \
 		B5=Odometer        | (in 1/10th miles)
 		B6=Odometer MSB   /
 		B7=Trip LSB    \ (in 1/10th miles)
 		B8=Trip MSB    /
 
-Some messages have been seen on CAN ID #0x400
+        16 bit status bits are:
+          - Accessory
+          - Ignition
+          - Spare
+          - High Beam
+          - Left Turn
+          - Right Turn
+          - Brake Fluid Low
+          - ABS Fault
+          - Parking Brake
+          - Seatbelt Fault
+          - Side Lamps
+          - Door Open
+          - Airbag Fault
+          - Mode 0
+          - Mode 1
+          - VMain
 
-	UNKNOWN
-		B1=0x01
-			Samples:
-		         0.0484 400 01 01 00 00 00 00 4C 1D          
-		         0.1487 400 01 01 00 00 00 00 4C 1D          
-		         0.2486 400 01 01 00 00 00 00 4C 1D          
-		         0.3486 400 01 01 00 00 00 00 4C 1D          
-		         0.4486 400 01 01 00 00 00 00 4C 1D          
+VMS -> Instrument Cluster on CAN ID #0x400
 
-                N.B. Suggestion is that 4th byte of 0x400 B1=0x01 is the PRND gear selection
+        B1 = command
+        B2..B8 = data
 
-	DASHBOARD
-		B1=0x02 Data to dashboard
-		B2=Battery graph (00-2F is full range, left 2 bits seem to be 10)
-		B3=AMPS LSB
-		B4=AMPS MSB (in LSN), MSN seems to be b1000
-		B5=Range LSB
-		B6=Range MSB (in LSN), MSN seems to be b1000
-		B7=Miles/Km legend switch - known values are 00=miles, 55=km
-		B8=0x00
+        B1 = 0x01 (send lamps, mph, rpm)
+             B2 = Lamps MSB
+             B3 = Lamps
+             B4 = Lamps LSB
+             B5 = MPH*10 LSB
+             B6 = MPH*10 MSB
+             B7 = RPM LSB
+             B8 = RPM MSB
+ 
+             Lamps are:
+               0 Traction blinking
+               1 No traction
+               2
+               3 Rear fog lamp
+               4
+               5 Cruise
+               6
+               7
+               8
+               9
+              10
+              11
+              12 Car lock yellow
+              13 Car lock red
+              14 Power
+              15 No regen braking
+              16 Seatbelt buzzer
+              17 Frost
+              18 Traction control
+              19 TPMS
+              20
+              21
+              22
+              23
+    
+        B1 = 0x02 (send battery, range, etc)
+             B2 = battery graph
+             B3 = current LSB
+             B4 = current MSB
+             B5 = range LSB
+             B6 = range MSG
+             B7 = miles/kilometers (0x00=miles, 0x55=kilometers)
+             B8 = odometer mode
 
-	UNKNOWN
-		B1=0x03
-			Samples:
-		         0.5484 400 03 29 6C 00 00 00 77 00          
-		         2.5990 400 03 29 6C 00 00 00 77 00          
-		         4.6386 400 03 29 6C 00 00 00 77 00          
-		         6.6384 400 03 29 6C 00 00 00 77 00          
-		         8.6605 400 03 29 6C 00 00 00 77 00          
+             Battery graph seems to be | 0x80, with 0x00-0x2f full range
+             Current seems to be | 0x8000
+             Range seems to be | 0x8000
+
+        B1 = 0x03 (send backlight, colours, etc)
+             B2 = backlight
+             B3 = analog
+             B4 = test mode
+             B5 = on/off
+             B6 = 0x00
+             B7 = colour?
+             B8 = colour?
 
 Any additions/corrections are welcome
